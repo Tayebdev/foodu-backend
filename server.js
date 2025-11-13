@@ -1,0 +1,28 @@
+const express = require("express");
+const path = require("path");
+const morgan = require("morgan");
+require("dotenv").config();
+const db = require("./config/db");
+const ErrorAPI = require("./utils/ErrorAppi");
+const GlobalError = require("./middlewares/globalError");
+const app = express();
+
+app.use(express.json());
+app.use("/upload", express.static(path.join(__dirname, "Uploads")));
+
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+  console.log(`✅ Mode: ${process.env.NODE_ENV}`);
+}
+
+app.use((req, res, next) => {
+  next(new ErrorAPI(`Can't find ${req.originalUrl} on the server`, 400));
+});
+
+// Global error handler
+app.use(GlobalError);
+
+const PORT = process.env.SERVER_PORT || 8000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
