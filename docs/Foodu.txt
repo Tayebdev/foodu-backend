@@ -20,6 +20,32 @@ class User {
   + logout(): void
   + updateProfile(): void
 }
+✅ In Foodu context, verified means:
+✔️ For Client
+
+Email or phone number was confirmed
+
+The account is trusted and not fake
+
+✔️ For Driver
+
+Driver’s documents (ID card, license, vehicle papers) are approved
+
+Driver is allowed to accept deliveries
+
+Prevents fake or unapproved drivers from using the app
+
+✔️ For Restaurant Owner
+
+Business documents are verified
+
+They are allowed to manage a restaurant
+
+Prevents fake restaurants
+
+✔️ For Admin
+
+Usually always verified automatically
 
 class UserProfile {
   - profileId: String <<PK>>
