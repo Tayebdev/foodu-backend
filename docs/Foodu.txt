@@ -1,0 +1,479 @@
+
+@startuml
+title Foodu Backend System - Complete (Algeria Version)
+skinparam classAttributeIconSize 0
+left to right direction
+
+' Core classes
+class User {
+  - userId: String <<PK>>
+  - name: String
+  - email: String
+  - phone: String
+  - passwordHash: String
+  - role: Enum{Admin,Client,RestaurantOwner,Driver}
+  - avatarUrl: String
+  - verified: Boolean
+  - createdAt: Date
+  - lastLogin: Date
+  + login(email:String,password:String): Boolean
+  + logout(): void
+  + updateProfile(): void
+}
+
+class UserProfile {
+  - profileId: String <<PK>>
+  - userId: String <<FK>>
+  - gender: String
+  - preferences: JSON
+}
+
+class RestaurantOwner {
+  - ownerId: String <<PK>>
+  - userId: String <<FK>>
+  - nationalId: String
+  - bankAccount: String
+  - verified: Boolean
+  - createdAt: Date
+}
+
+class Restaurant {
+  - restaurantId: String <<PK>>
+  - ownerId: String <<FK>>
+  - name: String
+  - logoUrl: String
+  - phone: String
+  - email: String
+  - wilaya: String
+  - commune: String
+  - address: String
+  - latitude: Float
+  - longitude: Float
+  - rating: Float
+  - status: Enum{Active,Closed,Suspended}
+  - commissionRate: Float
+  - createdAt: Date
+}
+
+class MenuCategory {
+  - categoryId: String <<PK>>
+  - restaurantId: String <<FK>>
+  - name: String
+  - description: String
+}
+
+class MenuItem {
+  - menuItemId: String <<PK>>
+  - categoryId: String <<FK>>
+  - name: String
+  - description: String
+  - price: Float
+  - imageUrl: String
+  - isAvailable: Boolean
+  - prepTimeMinutes: Int
+}
+
+class RestaurantSchedule {
+  - scheduleId: String <<PK>>
+  - restaurantId: String <<FK>>
+  - dayOfWeek: Enum{Mon,Tue,Wed,Thu,Fri,Sat,Sun}
+  - openTime: Time
+  - closeTime: Time
+  - isClosed: Boolean
+}
+
+class RestaurantSettings {
+  - settingsId: String <<PK>>
+  - restaurantId: String <<FK>>
+  - minOrderAmount: Float
+  - maxDeliveryDistanceKm: Float
+  - prepTimeAvg: Int
+  - autoAcceptOrders: Boolean
+}
+
+class RestaurantZone {
+  - zoneId: String <<PK>>
+  - restaurantId: String <<FK>>
+  - wilaya: String
+  - communes: JSON
+}
+
+class Client {
+  - clientId: String <<PK>>
+  - userId: String <<FK>>
+  - loyaltyPoints: Int
+}
+
+class Address {
+  - addressId: String <<PK>>
+  - clientId: String <<FK>>
+  - label: String
+  - wilaya: String
+  - commune: String
+  - latitude: Float
+  - longitude: Float
+  - street: String
+}
+
+class Cart {
+  - cartId: String <<PK>>
+  - clientId: String <<FK>>
+  - restaurantId: String <<FK>>
+  - total: Float
+  - createdAt: Date
+  + addItem(menuItemId:String,qty:Int): void
+  + removeItem(itemId:String): void
+}
+
+class CartItem {
+  - itemId: String <<PK>>
+  - cartId: String <<FK>>
+  - menuItemId: String <<FK>>
+  - quantity: Int
+  - subtotal: Float
+}
+
+class Order {
+  - orderId: String <<PK>>
+  - clientId: String <<FK>>
+  - restaurantId: String <<FK>>
+  - driverId: String <<FK>>
+  - addressId: String <<FK>>
+  - deliveryFee: Float
+  - totalAmount: Float
+  - status: Enum{Pending,Accepted,Preparing,OutForDelivery,Delivered,Cancelled}
+  - createdAt: Date
+  - estimatedTime: Date
+  + placeOrder(): void
+  + cancelOrder(): void
+}
+
+class OrderItem {
+  - orderItemId: String <<PK>>
+  - orderId: String <<FK>>
+  - menuItemId: String <<FK>>
+  - quantity: Int
+  - price: Float
+}
+
+class OrderStatusHistory {
+  - historyId: String <<PK>>
+  - orderId: String <<FK>>
+  - oldStatus: String
+  - newStatus: String
+  - changedAt: Date
+  - changedBy: String <<FK>>
+}
+
+class Payment {
+  - paymentId: String <<PK>>
+  - orderId: String <<FK>>
+  - method: Enum{CashOnDelivery,Card,Wallet}
+  - status: Enum{Pending,Paid,Failed,Refunded}
+  - amount: Float
+  - transactionId: String
+  - paidAt: Date
+}
+
+class Refund {
+  - refundId: String <<PK>>
+  - orderId: String <<FK>>
+  - amount: Float
+  - reason: String
+  - processedAt: Date
+}
+
+class Invoice {
+  - invoiceId: String <<PK>>
+  - orderId: String <<FK>>
+  - pdfUrl: String
+  - amount: Float
+  - issuedAt: Date
+}
+
+class Driver {
+  - driverId: String <<PK>>
+  - userId: String <<FK>>
+  - vehicleId: String <<FK>>
+  - licenseNumber: String
+  - verified: Boolean
+  - availability: Enum{Online,Offline,Busy}
+  - totalTrips: Int
+  - rating: Float
+  + acceptDelivery(requestId:String): void
+  + updateLocation(lat:Float,lon:Float): void
+}
+
+class Vehicle {
+  - vehicleId: String <<PK>>
+  - driverId: String <<FK>>
+  - type: Enum{Car,Bike,Scooter}
+  - plateNumber: String
+  - model: String
+  - color: String
+  - capacityKg: Float
+}
+
+class DriverDocument {
+  - documentId: String <<PK>>
+  - driverId: String <<FK>>
+  - type: Enum{IDCard,License,VehiclePapers}
+  - url: String
+  - verified: Boolean
+  - uploadedAt: Date
+}
+
+class DeliveryRequest {
+  - requestId: String <<PK>>
+  - orderId: String <<FK>>
+  - driverId: String <<FK>>
+  - status: Enum{Pending,Accepted,PickedUp,Delivered,Cancelled}
+  - distanceKm: Float
+  - durationMin: Float
+  - assignedAt: Date
+  - completedAt: Date
+}
+
+class DriverLocation {
+  - locationId: String <<PK>>
+  - driverId: String <<FK>>
+  - latitude: Float
+  - longitude: Float
+  - updatedAt: Date
+}
+
+class DriverEarning {
+  - earningId: String <<PK>>
+  - driverId: String <<FK>>
+  - orderId: String <<FK>>
+  - amount: Float
+  - bonus: Float
+  - commission: Float
+  - date: Date
+}
+
+class Rating {
+  - ratingId: String <<PK>>
+  - fromUserId: String <<FK>>
+  - toUserId: String <<FK>>
+  - orderId: String <<FK>>
+  - rating: Float
+  - comment: String
+  - createdAt: Date
+}
+
+class RestaurantReview {
+  - reviewId: String <<PK>>
+  - restaurantId: String <<FK>>
+  - clientId: String <<FK>>
+  - rating: Float
+  - comment: String
+  - createdAt: Date
+}
+
+class Media {
+  - mediaId: String <<PK>>
+  - userId: String <<FK>>
+  - url: String
+  - type: Enum{Image,Document}
+  - createdAt: Date
+}
+
+class Notification {
+  - notificationId: String <<PK>>
+  - userId: String <<FK>>
+  - title: String
+  - body: String
+  - type: Enum{OrderUpdate,Promo,System,Support}
+  - isRead: Boolean
+  - sentAt: Date
+  + send(): void
+}
+
+class Promotion {
+  - promoId: String <<PK>>
+  - code: String
+  - discountPercent: Float
+  - validFrom: Date
+  - validTo: Date
+  - minOrderValue: Float
+  - isActive: Boolean
+}
+
+class PromoUsage {
+  - usageId: String <<PK>>
+  - promoId: String <<FK>>
+  - clientId: String <<FK>>
+  - orderId: String <<FK>>
+  - usedAt: Date
+}
+
+class SystemConfig {
+  - configId: String <<PK>>
+  - key: String
+  - value: String
+  - updatedAt: Date
+}
+
+class Commission {
+  - commissionId: String <<PK>>
+  - entityType: Enum{Driver,Restaurant}
+  - entityId: String
+  - rate: Float
+  - effectiveFrom: Date
+  - effectiveTo: Date
+}
+
+class RealTimeTracking {
+  - trackingId: String <<PK>>
+  - orderId: String <<FK>>
+  - driverId: String <<FK>>
+  - latitude: Float
+  - longitude: Float
+  - speed: Float
+  - updatedAt: Date
+}
+
+class RestaurantPayout {
+  - payoutId: String <<PK>>
+  - restaurantId: String <<FK>>
+  - amount: Float
+  - status: Enum{Pending,Sent,Failed}
+  - periodStart: Date
+  - periodEnd: Date
+  - sentAt: Date
+}
+
+class DistanceMatrixCache {
+  - cacheId: String <<PK>>
+  - fromLat: Float
+  - fromLng: Float
+  - toLat: Float
+  - toLng: Float
+  - distanceKm: Float
+  - durationMin: Float
+  - cachedAt: Date
+}
+
+class RestaurantSettings {
+  - settingsId: String <<PK>>
+  - restaurantId: String <<FK>>
+  - minOrderAmount: Float
+  - maxDeliveryDistanceKm: Float
+  - prepTimeAvg: Int
+  - autoAcceptOrders: Boolean
+}
+
+class RestaurantZone {
+  - zoneId: String <<PK>>
+  - restaurantId: String <<FK>>
+  - wilaya: String
+  - communes: JSON
+}
+
+class DeliveryZone {
+  - zoneId: String <<PK>>
+  - name: String
+  - polygon: JSON
+  - createdAt: Date
+}
+
+class Banner {
+  - bannerId: String <<PK>>
+  - imageUrl: String
+  - title: String
+  - actionUrl: String
+  - isActive: Boolean
+  - createdAt: Date
+}
+
+class SearchHistory {
+  - historyId: String <<PK>>
+  - clientId: String <<FK>>
+  - query: String
+  - searchedAt: Date
+}
+
+class Recommendation {
+  - recId: String <<PK>>
+  - clientId: String <<FK>>
+  - type: Enum{MenuItem,Restaurant}
+  - data: JSON
+  - generatedAt: Date
+}
+
+class SupportTicket {
+  - ticketId: String <<PK>>
+  - userId: String <<FK>>
+  - category: String
+  - message: String
+  - status: Enum{Open,InProgress,Resolved,Closed}
+  - createdAt: Date
+}
+
+class AnalyticsReport {
+  - reportId: String <<PK>>
+  - totalOrders: Int
+  - totalRevenue: Float
+  - topRestaurants: JSON
+  - topDrivers: JSON
+  - cancelledOrders: Int
+  - date: Date
+}
+
+' Inheritance
+RestaurantOwner --|> User
+Driver --|> User
+Client --|> User
+Admin --|> User
+
+' Relationships
+User "1" -- "1" UserProfile
+User "1" -- "0..*" Media
+User "1" -- "0..*" Notification
+User "1" -- "0..*" SupportTicket
+RestaurantOwner "1" -- "0..*" Restaurant
+Restaurant "1" -- "0..*" MenuCategory
+MenuCategory "1" -- "0..*" MenuItem
+Restaurant "1" -- "0..*" RestaurantSchedule
+Restaurant "1" -- "0..*" RestaurantSettings
+Restaurant "1" -- "0..*" RestaurantZone
+Restaurant "1" -- "0..*" RestaurantPayout
+Client "1" -- "0..*" Address
+Client "1" -- "0..1" Cart
+Cart "1" -- "0..*" CartItem
+Client "1" -- "0..*" Order
+Order "1" -- "0..*" OrderItem
+Order "1" -- "1" OrderStatusHistory : records >
+Order "1" -- "0..1" Payment
+Payment "1" -- "0..1" Refund
+Order "1" -- "0..1" Invoice
+Order "1" -- "0..1" DeliveryRequest
+DeliveryRequest "1" -- "0..1" Driver
+Driver "1" -- "0..*" Vehicle
+Driver "1" -- "0..*" DriverDocument
+Driver "1" -- "0..*" DriverLocation
+Driver "1" -- "0..*" DriverEarning
+Driver "1" -- "0..*" DeliveryRequest
+DeliveryRequest "1" -- "0..1" RealTimeTracking
+MenuItem "1" -- "0..*" RestaurantReview
+Client "1" -- "0..*" RestaurantReview
+Promotion "1" -- "0..*" PromoUsage
+PromoUsage "1" -- "0..1" Order
+Promotion "1" -- "0..*" Order : applies >
+Order "1" -- "0..*" Rating : contains >
+User "1" -- "0..*" Rating : author >
+Recommendation "1" -- "0..1" Client
+SearchHistory "1" -- "0..1" Client
+DistanceMatrixCache "1" -- "0..*" DeliveryZone
+
+' Misc links
+Commission "1" -- "0..*" Restaurant
+Commission "1" -- "0..*" Driver
+
+note top of User : "Core user entity for all roles"
+note top of Order : "Central order entity connecting client, restaurant, delivery, payment, invoice"
+note right of Restaurant : "Includes Algeria fields: wilaya, commune"
+note left of DeliveryRequest : "Manages driver assignment and delivery lifecycle"
+
+@enduml
