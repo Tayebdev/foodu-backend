@@ -7,7 +7,7 @@ const {
   getAll,
 } = require("./factory_handler");
 
-const createAddress = createOne(addressModel,"address");
+const createAddress = createOne(addressModel, "address");
 const deleteAddress = deleteOne(addressModel, "address");
 const updateAddress = updateOne(addressModel, "address");
 const getAddressById = getOne(addressModel, "address");
