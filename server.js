@@ -5,8 +5,10 @@ const db = require("./config/db");
 const ErrorAPI = require("./utils/ErrorAppi");
 const GlobalError = require("./middlewares/globalError");
 require("dotenv").config();
+const mountRoutes = require("./routes/mount_router");
 
-const userRoutes = require("./routes/user_route");
+
+
 
 const app = express();
 
@@ -18,8 +20,7 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
   console.log(`✅ Mode: ${process.env.NODE_ENV}`);
 }
-
-app.use("/api/v1/user", userRoutes);
+mountRoutes(app);
 
 app.use((req, res, next) => {
   next(new ErrorAPI(`Can't find ${req.originalUrl} on the server`, 400));
