@@ -16,7 +16,7 @@ const {
 
 router.route("/").post(createClientValidator, createClient).get(getAllClients);
 router
-  .route("/:id")
+  .route("/id/:id")
   .get(getClientByIdValidator, getClientById)
   .put(updateClientValidator, updateClient)
   .delete(deleteClientValidator, deleteClient);

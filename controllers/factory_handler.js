@@ -14,7 +14,7 @@ exports.createOne = (model, modelName) => {
 
     res.status(201).json({
       status: "success",
-      data: result,
+      message: `${modelName} created successfully`,
     });
   });
 };
