@@ -1,20 +1,9 @@
-const db = require("../config/db");
+const BaseModel = require("./base_model");
 
-const ClientModel = {
-  create: async (client) => {
-    return await db("client").insert(client);
-  },
-  getAll: async () => {
-    return await db("client").select("*");
-  },
-  getById: async (id) => {
-    return await db("client").select("*").where({ id }).first();
-  },
-  update: async (id, clientData) => {
-    return await db("client").where({ id }).update(clientData);
-  },
-  delete: async (id) => {
-    return await db("client").where({ id }).del();
-  },
-};
-module.exports = ClientModel;
+class ClientModel extends BaseModel {
+  constructor() {
+    super("client");
+  }
+}
+
+module.exports = new ClientModel();

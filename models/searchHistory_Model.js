@@ -1,21 +1,9 @@
-const db = require("../config/db");
+const BaseModel = require("./base_model");
 
-const searchHistoryModel = {
-  create: async (searchHistory) => {
-    return await db("searchHistory").insert(searchHistory);
-  },
-  getAll: async () => {
-    return await db("searchHistory").select("*");
-  },
-  getOne: async (id) => {
-    return await db("searchHistory").where({ id }).first();
-  },
-  update: async (id, searchHistory) => {
-    return db("searchHistory").where({ id }).update(searchHistory);
-  },
-  delete: async (id) => {
-    return db("searchHistory").where({ id }).del();
-  },
-};
+class SearchHistoryModel extends BaseModel {
+  constructor() {
+    super("searchHistory");
+  }
+}
 
-module.exports = searchHistoryModel;
+module.exports = new SearchHistoryModel();

@@ -10,7 +10,8 @@
     "migrate_latest": "knex migrate:latest --knexfile knexfile.js --env development",
     "migrate_rollback": "knex migrate:rollback --knexfile knexfile.js --env development",
     "seed_make": "knex seed:make --knexfile knexfile.js --env development",
-    "seed_run": "knex seed:run --knexfile knexfile.js --env development"
+    "seed_run": "knex seed:run --knexfile knexfile.js --env development",
+    "migrate_status": "knex migrate:status --knexfile knexfile.js --env development"
   },
   "keywords": [],
   "author": "",

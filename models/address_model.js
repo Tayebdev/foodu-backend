@@ -1,21 +1,9 @@
-const db = require("../config/db");
+const BaseModel = require("./base_model");
 
-const addressModel = {
-  create: async (addressData) => {
-    return await db("address").insert(addressData);
-  },
-  getById: async (id) => {
-    return await db("address").where({ id }).first();
-  },
-  update: async (id, addressData) => {
-    return await db("address").where({ id }).update(addressData);
-  },
-  getAll: async () => {
-    return await db("address").select("*");
-  },
-  delete: async (id) => {
-    return await db("address").where({ id }).del();
-  },
-};
+class AddressModel extends BaseModel {
+  constructor() {
+    super("address"); // table name
+  }
+}
 
-module.exports = addressModel;
+module.exports = new AddressModel();

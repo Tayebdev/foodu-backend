@@ -1,33 +1,27 @@
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
-const UserModel = {
-  create: async (user) => {
-    const result = await db("user").insert(user);
-    return result[0];
-  },
-  getAll: async () => {
-    return await db("user").select("*");
-  },
-  getById: async (id) => {
-    return await db("user").select("*").where({ id }).first();
-  },
-  getByEmail: async (email) => {
-    return await db("user").select("*").where({ email }).first();
-  },
-  getByPhone: async (phone) => {
-    return await db("user").select("*").where({ phone }).first();
-  },
-  delete: async (id) => {
-    return await db("user").where({ id }).del();
-  },
-  update: async (id, userData) => {
-    return await db("user").where({ id }).update(userData);
-  },
-  changePassword: async (id, password) => {
-    return await db("user")
-      .where({ id })
-      .update({ password: await bcrypt.hash(password, 8) });
-  },
-};
+const BaseModel = require("./base_model");
 
-module.exports = UserModel;
+class UserModel extends BaseModel {
+  constructor() {
+    super("user");
+  }
+  async getByEmail(email) {
+    return await db(this.tableName).where({ email }).first();
+  }
+  async getByPhone(phone) {
+    return await db(this.tableName).where({ phone }).first();
+  }
+  async changePassword(id, password) {
+    const hashedPassword = await bcrypt.hash(password, 8);
+    return await db(this.tableName)
+      .where({ id })
+      .update({ password: hashedPassword });
+  }
+  async create(user) {
+    const result = await super.create(user);
+    return result[0];
+  }
+}
+
+module.exports = new UserModel();
