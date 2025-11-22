@@ -36,6 +36,9 @@ exports.getAll = (model, modelName) => {
 exports.getOne = (model, modelName, idParam = "id") => {
   return asyncHandler(async (req, res, next) => {
     const result = await model.getById(req.params[idParam]);
+    if (!result) {
+      throw new ErrorAPI(`No ${modelName} found`, 404);
+    }
     res.status(200).json({
       status: "success",
       data: result,

@@ -207,10 +207,9 @@ class Driver {
 class Vehicle {
   - vehicleId: String <<PK>>
   - driverId: String <<FK>>
-  - type: Enum{Car,Bike,Scooter}
+  - type: Enum{bike,ElectricBicycle,Motorcycle,Scooter}
   - plateNumber: String
   - model: String
-  - capacityKg: Float
 }
 
 class DriverDocument {
