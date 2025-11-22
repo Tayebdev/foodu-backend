@@ -31,10 +31,16 @@ class UserProfile {
 class RestaurantOwner {
   - ownerId: String <<PK>>
   - userId: String <<FK>>
-  - nationalId: String
-  - bankAccount: String
   - verified: Boolean
+  - documentsVerified: Boolean
   - createdAt: Date
+  - updatedAt: Date
+  - picture: String   
+  - isActive: Boolean               
+  + register(): void              
+  + updateProfile(): void         
+  + verifyDocuments(): void
+  + activateAccount(): void
 }
 
 class Restaurant {
@@ -412,6 +418,7 @@ Client "1" -- "0..*" Address
 Client "1" -- "0..1" Cart
 Cart "1" -- "0..*" CartItem
 Client "1" -- "0..*" Order
+Order "1" -- "0..*" DriverEarning
 Order "1" -- "0..*" OrderItem
 Order "1" -- "1" OrderStatusHistory : records >
 Order "1" -- "0..1" Payment
