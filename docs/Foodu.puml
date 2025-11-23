@@ -59,6 +59,7 @@ class Restaurant {
   - status: Enum{Active,Closed,Suspended}
   - commissionRate: Float
   - createdAt: Date
+  - isBlocked: Boolean
 }
 
 class MenuCategory {
@@ -190,6 +191,7 @@ class Driver {
   - rating: Float
   - latitude: Float
   - longitude: Float
+  - isBlocked: Boolean
   + acceptDelivery(requestId:String): void
   + updateLocation(lat:Float,lon:Float): void
 }
@@ -242,29 +244,12 @@ class Rating {
   - createdAt: Date
 }
 
-class RestaurantReview {
-  - reviewId: String <<PK>>
-  - restaurantId: String <<FK>>
-  - clientId: String <<FK>>
-  - rating: Float
-  - comment: String
-  - createdAt: Date
-}
-
-class Media {
-  - mediaId: String <<PK>>
-  - userId: String <<FK>>
-  - url: String
-  - type: Enum{Image,Document}
-  - createdAt: Date
-}
 
 class Notification {
   - notificationId: String <<PK>>
   - userId: String <<FK>>
   - title: String
   - body: String
-  - type: Enum{OrderUpdate,Promo,System,Support}
   - isRead: Boolean
   - sentAt: Date
   + send(): void
@@ -290,11 +275,17 @@ class PromoUsage {
 
 class Commission {
   - commissionId: String <<PK>>
-  - entityType: Enum{Driver,Restaurant}
-  - entityId: String
-  - rate: Float
-  - effectiveFrom: Date
-  - effectiveTo: Date
+  - entityType: Enum{Driver,Restaurant}  
+  - entityId: String                      
+  - amountDue: Float                       
+  - status: Enum{Pending,Paid,Overdue,Blocked}
+  - dueDate: Date
+  - paidAt: Date
+  - updatedAt: Date
+  + markAsPaid(): void
+  + markAsOverdue(): void
+  + blockEntity(): void
+  + calculateNewDebt(orderId:String): void
 }
 
 class RealTimeTracking {
@@ -382,7 +373,6 @@ Admin --|> User
 
 ' Relationships
 User "1" -- "1" UserProfile
-User "1" -- "0..*" Media
 User "1" -- "0..*" Notification
 User "1" -- "0..*" SupportTicket
 RestaurantOwner "1" -- "0..*" Restaurant
@@ -407,8 +397,6 @@ Driver "1" -- "0..*" DriverDocument
 Driver "1" -- "0..*" DriverEarning
 Driver "1" -- "0..*" DeliveryRequest
 DeliveryRequest "1" -- "0..1" RealTimeTracking
-MenuItem "1" -- "0..*" RestaurantReview
-Client "1" -- "0..*" RestaurantReview
 Promotion "1" -- "0..*" PromoUsage
 PromoUsage "1" -- "0..1" Order
 Promotion "1" -- "0..*" Order : applies >

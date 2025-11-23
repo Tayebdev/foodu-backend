@@ -16,6 +16,7 @@ exports.up = function (knex) {
     table.decimal("longitude", 30, 20).nullable();
     table.float("rating").defaultTo(1.0);
     table.check("rating >= 1 AND rating <= 5");
+    table.boolean("isBlocked").defaultTo("false");
     table.enum("status", ["Active", "Closed", "Suspended"]).defaultTo("Active");
     table.float("commissionRate").defaultTo(10.0); // default 10%
     table.timestamp("createdAt").defaultTo(knex.fn.now());

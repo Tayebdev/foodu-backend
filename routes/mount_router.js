@@ -13,6 +13,8 @@ const mountRoutes = (app) => {
   app.use("/api/v1/restaurantPayout", require("./restaurantPayout_route"));
   app.use("/api/v1/menuCategory", require("./menuCategory_route"));
   app.use("/api/v1/menuItem", require("./menuItem_route"));
+  app.use("/api/v1/commission", require("./commission_route"));
+  app.use("/api/v1/notification", require("./notification_route"));
 };
 
 module.exports = mountRoutes;

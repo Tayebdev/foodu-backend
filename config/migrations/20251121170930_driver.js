@@ -11,6 +11,7 @@ exports.up = function (knex) {
     table.check("rating >= 1 AND rating <= 5");
     table.decimal("latitude", 30, 20).nullable();
     table.decimal("longitude", 30, 20).nullable();
+    table.boolean("isBlocked").defaultTo("false");
     table.timestamp("createdAt").defaultTo(knex.fn.now());
     table.timestamp("updatedAt").defaultTo(knex.fn.now());
 
