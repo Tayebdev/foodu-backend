@@ -8,6 +8,7 @@ const mountRoutes = (app) => {
   app.use("/api/v1/vehicle", require("./vehicle_route"));
   app.use("/api/v1/driverDocument", require("./driverDocument_route"));
   app.use("/api/v1/restaurantOwner", require("./restaurantOwner_route"));
+  app.use("/api/v1/restaurant", require("./restaurant_route"));
 };
 
 module.exports = mountRoutes;

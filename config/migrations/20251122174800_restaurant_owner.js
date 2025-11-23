@@ -6,7 +6,6 @@ exports.up = function (knex) {
   return knex.schema.createTable("restaurantOwner", function (table) {
     table.increments("id").primary();
     table.integer("userId").unsigned().notNullable();
-    table.boolean("verified").defaultTo(false);
     table.boolean("documentsVerified").defaultTo(false);
     table.string("picture").nullable();
     table.boolean("isActive").defaultTo(false);
