@@ -97,12 +97,6 @@ class RestaurantSettings {
   - autoAcceptOrders: Boolean
 }
 
-class RestaurantZone {
-  - zoneId: String <<PK>>
-  - restaurantId: String <<FK>>
-  - wilaya: String
-  - communes: JSON
-}
 
 class Client {
   - clientId: String <<PK>>
@@ -326,13 +320,23 @@ class RealTimeTracking {
 class RestaurantPayout {
   - payoutId: String <<PK>>
   - restaurantId: String <<FK>>
-  - amount: Float
-  - status: Enum{Pending,Sent,Failed}
+  - driverId: String <<FK>>
+  - totalSales: Float
+  - commissionRate: Float
+  - commissionAmount: Float
+  - netAmount: Float
+  - status: Enum{Pending,Sent,Failed,InTransit}
   - periodStart: Date
   - periodEnd: Date
   - sentAt: Date
+  + calculatePayout()
+  + assignDriver(driverId)
+  + markAsSent()
+  + markAsInTransit()
+  + markAsFailed()
+  + updateStatus(status)   
+  + generateInvoice()
 }
-
 
 class RestaurantSettings {
   - settingsId: String <<PK>>
@@ -342,14 +346,6 @@ class RestaurantSettings {
   - prepTimeAvg: Int
   - autoAcceptOrders: Boolean
 }
-
-class RestaurantZone {
-  - zoneId: String <<PK>>
-  - restaurantId: String <<FK>>
-  - wilaya: String
-  - communes: JSON
-}
-
 
 class Banner {
   - bannerId: String <<PK>>
@@ -412,7 +408,6 @@ Restaurant "1" -- "0..*" MenuCategory
 MenuCategory "1" -- "0..*" MenuItem
 Restaurant "1" -- "0..*" RestaurantSchedule
 Restaurant "1" -- "0..*" RestaurantSettings
-Restaurant "1" -- "0..*" RestaurantZone
 Restaurant "1" -- "0..*" RestaurantPayout
 Client "1" -- "0..*" Address
 Client "1" -- "0..1" Cart

@@ -9,6 +9,8 @@ const mountRoutes = (app) => {
   app.use("/api/v1/driverDocument", require("./driverDocument_route"));
   app.use("/api/v1/restaurantOwner", require("./restaurantOwner_route"));
   app.use("/api/v1/restaurant", require("./restaurant_route"));
+  app.use("/api/v1/restaurantSchedule", require("./restaurantSchedule_route"));
+  app.use("/api/v1/restaurantPayout", require("./restaurantPayout_route"));
 };
 
 module.exports = mountRoutes;
