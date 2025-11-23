@@ -65,7 +65,6 @@ class MenuCategory {
   - categoryId: String <<PK>>
   - restaurantId: String <<FK>>
   - name: String
-  - description: String
 }
 
 class MenuItem {
@@ -86,15 +85,6 @@ class RestaurantSchedule {
   - openTime: Time
   - closeTime: Time
   - isClosed: Boolean
-}
-
-class RestaurantSettings {
-  - settingsId: String <<PK>>
-  - restaurantId: String <<FK>>
-  - minOrderAmount: Float
-  - maxDeliveryDistanceKm: Float
-  - prepTimeAvg: Int
-  - autoAcceptOrders: Boolean
 }
 
 
@@ -338,14 +328,6 @@ class RestaurantPayout {
   + generateInvoice()
 }
 
-class RestaurantSettings {
-  - settingsId: String <<PK>>
-  - restaurantId: String <<FK>>
-  - minOrderAmount: Float
-  - maxDeliveryDistanceKm: Float
-  - prepTimeAvg: Int
-  - autoAcceptOrders: Boolean
-}
 
 class Banner {
   - bannerId: String <<PK>>
@@ -407,7 +389,6 @@ RestaurantOwner "1" -- "0..*" Restaurant
 Restaurant "1" -- "0..*" MenuCategory
 MenuCategory "1" -- "0..*" MenuItem
 Restaurant "1" -- "0..*" RestaurantSchedule
-Restaurant "1" -- "0..*" RestaurantSettings
 Restaurant "1" -- "0..*" RestaurantPayout
 Client "1" -- "0..*" Address
 Client "1" -- "0..1" Cart
