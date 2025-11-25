@@ -382,7 +382,9 @@ Restaurant "1" -- "0..*" RestaurantSchedule
 Restaurant "1" -- "0..*" RestaurantPayout
 Client "1" -- "0..*" Address
 Client "1" -- "0..1" Cart
+Restaurant "1" -- "0..*" Cart
 Cart "1" -- "0..*" CartItem
+MenuItem "1" -- "0..*" CartItem
 Client "1" -- "0..*" Order
 Order "1" -- "0..*" DriverEarning
 Order "1" -- "0..*" OrderItem
