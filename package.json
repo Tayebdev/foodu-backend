@@ -1,7 +1,7 @@
 {
   "name": "foodu-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "**Foodu Backend** is a production-ready, modular **Node.js REST API** built with **Express** and **Knex.js** for SQL databases. It supports a full food delivery ecosystem: **Client**, **Restaurant**, **Driver**, and **Admin** modules. The backend is designed for scalability, maintainability, and real-time operations.",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon ./server.js",
@@ -11,12 +11,23 @@
     "migrate_rollback": "knex migrate:rollback --knexfile knexfile.js --env development",
     "seed_make": "knex seed:make --knexfile knexfile.js --env development",
     "seed_run": "knex seed:run --knexfile knexfile.js --env development",
-    "migrate_status": "knex migrate:status --knexfile knexfile.js --env development"
+    "migrate_status": "knex migrate:status --knexfile knexfile.js --env development",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:reset": "prisma migrate reset",
+    "prisma:studio": "prisma studio",
+    "prisma:format": "prisma format",
+    "prisma:validate": "prisma validate",
+    "prisma:push": "prisma db push",
+    "prisma:pull": "prisma db pull",
+    "prisma:erd": "prisma generate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@prisma/client": "^6.10.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "cross-env": "^10.1.0",
@@ -35,5 +46,21 @@
     "path": "^0.12.7",
     "sharp": "^0.34.5",
     "uuid": "^13.0.0"
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tayebdev/foodu-backend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Tayebdev/foodu-backend/issues"
+  },
+  "homepage": "https://github.com/Tayebdev/foodu-backend#readme",
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.12.0",
+    "prisma": "^6.10.0",
+    "prisma-erd-generator": "^2.3.0"
   }
 }

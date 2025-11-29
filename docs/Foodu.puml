@@ -338,14 +338,6 @@ class SearchHistory {
   - searchedAt: Date
 }
 
-class Recommendation {
-  - recId: String <<PK>>
-  - clientId: String <<FK>>
-  - type: Enum{MenuItem,Restaurant}
-  - data: JSON
-  - generatedAt: Date
-}
-
 class SupportTicket {
   - ticketId: String <<PK>>
   - userId: String <<FK>>
@@ -404,7 +396,6 @@ PromoUsage "1" -- "0..1" Order
 Promotion "1" -- "0..*" Order : applies >
 Order "1" -- "0..*" Rating : contains >
 User "1" -- "0..*" Rating : author >
-Recommendation "1" -- "0..1" Client
 SearchHistory "1" -- "0..1" Client
 
 ' Misc links

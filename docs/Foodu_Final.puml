@@ -1,0 +1,954 @@
+@startuml
+title Foodu Backend System - Production Ready (COD Optimized)
+skinparam classAttributeIconSize 0
+left to right direction
+class User {
+  - userId: String <<PK>>
+  - name: String
+  - email: String <<unique>>
+  - phone: String <<unique>>
+  - passwordHash: String
+  - role: Enum{Admin, Client, RestaurantOwner, Driver}
+  - avatarUrl: String
+  - verified: Boolean
+  - isActive: Boolean
+  - isBanned: Boolean
+  - createdAt: Date
+  - updatedAt: Date
+  - lastLogin: Date
+  + register(email, password, role): User
+  + login(email, password): String
+  + logout(): void
+  + updateProfile(data): User
+  + changePassword(oldPassword, newPassword): Boolean
+  + resetPassword(token, newPassword): Boolean
+  + verifyEmail(token): Boolean
+  + uploadAvatar(file): String
+  + deleteAccount(): void
+  + getById(userId): User
+  + getByEmail(email): User
+  + getByPhone(phone): User
+  + ban(reason): void
+  + unban(): void
+  + activate(): void
+  + deactivate(): void
+}
+class UserProfile {
+  - profileId: String <<PK>>
+  - userId: String <<FK>>
+  - gender: String
+  - dateOfBirth: Date
+  - preferences: JSON
+  - language: String
+  - timezone: String
+  - notificationSettings: JSON
+  + create(userId, data): UserProfile
+  + update(data): UserProfile
+  + delete(): void
+  + getPreferences(): JSON
+  + updatePreferences(preferences): void
+  + getByUserId(userId): UserProfile
+}
+class Admin {
+  - adminId: String <<PK>>
+  - userId: String <<FK>>
+  - permissions: String[]
+  - level: Enum{SuperAdmin, Moderator, Support}
+  - lastActivityAt: Date
+  + create(userId, level): Admin
+  + banUser(userId, reason): void
+  + unbanUser(userId): void
+  + approveRestaurant(restaurantId): void
+  + suspendRestaurant(restaurantId, reason): void
+  + verifyDriver(driverId): void
+  + blockDriver(driverId, reason): void
+  + resolveDispute(orderId, resolution): void
+  + generateReport(type, period): Report
+  + managePromotion(promoId, action): void
+  + viewAnalytics(period): Analytics
+  + assignPermission(permission): void
+  + revokePermission(permission): void
+  + hasPermission(permission): Boolean
+  + verifyCODCollection(collectionId): void
+  + reviewCODDispute(disputeId): void
+}
+class Client {
+  - clientId: String <<PK>>
+  - userId: String <<FK>>
+  - loyaltyPoints: Int
+  - totalOrders: Int
+  - totalSpent: Float
+  - favoriteRestaurants: String[]
+  - membershipTier: Enum{Bronze, Silver, Gold, Platinum}
+  + create(userId): Client
+  + placeOrder(cartId, addressId, paymentMethod): Order
+  + viewOrderHistory(filters): List<Order>
+  + trackOrder(orderId): TrackingInfo
+  + cancelOrder(orderId, reason): Boolean
+  + rateOrder(orderId, restaurantScore, driverScore): void
+  + addToCart(restaurantId, menuItemId, quantity): CartItem
+  + applyPromoCode(code): Promotion
+  + addAddress(addressData): Address
+  + setDefaultAddress(addressId): void
+  + viewLoyaltyPoints(): Int
+  + redeemPoints(points): Discount
+  + addFavoriteRestaurant(restaurantId): void
+  + removeFavoriteRestaurant(restaurantId): void
+  + upgradeMembership(): void
+  + confirmCashPayment(orderId): void
+  + reportCODIssue(orderId, issue): void
+}
+class RestaurantOwner {
+  - ownerId: String <<PK>>
+  - userId: String <<FK>>
+  - verified: Boolean
+  - documentsVerified: Boolean
+  - isActive: Boolean
+  - totalRestaurants: Int
+  - businessLicense: String
+  + create(userId): RestaurantOwner
+  + registerRestaurant(data): Restaurant
+  + updateRestaurant(restaurantId, data): Restaurant
+  + deleteRestaurant(restaurantId): void
+  + manageMenu(restaurantId): Menu
+  + addMenuItem(categoryId, itemData): MenuItem
+  + updateMenuItem(itemId, data): MenuItem
+  + deleteMenuItem(itemId): void
+  + toggleItemAvailability(itemId): void
+  + viewOrders(restaurantId, filters): List<Order>
+  + acceptOrder(orderId): void
+  + rejectOrder(orderId, reason): void
+  + updateOrderStatus(orderId, status): void
+  + viewEarnings(restaurantId, period): Earnings
+  + requestPayout(restaurantId): Payout
+  + uploadDocuments(documents): void
+  + verifyDocuments(): void
+}
+class Driver {
+  - driverId: String <<PK>>
+  - userId: String <<FK>>
+  - verified: Boolean
+  - availability: Enum{Online, Offline, Busy}
+  - totalTrips: Int
+  - completedTrips: Int
+  - cancelledTrips: Int
+  - rating: Float
+  - currentLatitude: Float
+  - currentLongitude: Float
+  - isBlocked: Boolean
+  - vehicleType: String
+  - activeDeliveryId: String
+  - lastLocationUpdate: Date
+  - cashOnHand: Float
+  + create(userId): Driver
+  + toggleAvailability(status): void
+  + acceptDeliveryRequest(requestId): void
+  + rejectDeliveryRequest(requestId, reason): void
+  + updateLocation(lat, lon): void
+  + startDelivery(requestId): void
+  + markPickedUp(requestId): void
+  + markDelivered(requestId): void
+  + confirmCODCollection(orderId, amount): CashCollection
+  + viewEarnings(period): Earnings
+  + viewDeliveryHistory(filters): List<Delivery>
+  + uploadDocuments(documents): void
+  + updateVehicleInfo(vehicleData): Vehicle
+  + reportIssue(orderId, issue): Ticket
+  + getNearbyOrders(radius): List<Order>
+  + getActiveDelivery(): DeliveryRequest
+  + updateRating(newRating): void
+  + depositCash(amount): void
+  + getCashBalance(): Float
+}
+class Restaurant {
+  - restaurantId: String <<PK>>
+  - ownerId: String <<FK>>
+  - name: String
+  - slug: String <<unique>>
+  - logoUrl: String
+  - bannerUrl: String
+  - phone: String
+  - email: String
+  - wilaya: String
+  - commune: String
+  - address: String
+  - latitude: Float
+  - longitude: Float
+  - rating: Float
+  - totalRatings: Int
+  - status: Enum{Active, Closed, Suspended, PendingApproval}
+  - commissionRate: Float
+  - deliveryRadius: Float
+  - minOrderAmount: Float
+  - avgDeliveryTime: Int
+  - cuisineTypes: String[]
+  - createdAt: Date
+  - isBlocked: Boolean
+  - isFeatured: Boolean
+  - acceptsCOD: Boolean
+  + create(data): Restaurant
+  + update(data): Restaurant
+  + delete(): void
+  + updateStatus(status): void
+  + acceptOrder(orderId): void
+  + rejectOrder(orderId, reason): void
+  + startPreparing(orderId): void
+  + markReady(orderId): void
+  + checkAvailability(): Boolean
+  + calculateDeliveryFee(distance): Float
+  + isWithinDeliveryRadius(lat, lon): Boolean
+  + updateRating(newRating): void
+  + getMenu(): Menu
+  + getActiveOrders(): List<Order>
+  + getById(restaurantId): Restaurant
+  + search(query, filters): List<Restaurant>
+  + getNearby(lat, lon, radius): List<Restaurant>
+  + feature(): void
+  + unfeature(): void
+  + toggleCODAcceptance(): void
+}
+class RestaurantSchedule {
+  - scheduleId: String <<PK>>
+  - restaurantId: String <<FK>>
+  - dayOfWeek: Enum{Mon, Tue, Wed, Thu, Fri, Sat, Sun}
+  - openTime: Time
+  - closeTime: Time
+  - isClosed: Boolean
+  - isHoliday: Boolean
+  + create(data): RestaurantSchedule
+  + update(data): RestaurantSchedule
+  + delete(): void
+  + isOpenNow(): Boolean
+  + getNextOpenTime(): Time
+  + getByRestaurant(restaurantId): List<RestaurantSchedule>
+  + setHoliday(date): void
+}
+class MenuCategory {
+  - categoryId: String <<PK>>
+  - restaurantId: String <<FK>>
+  - name: String
+  - description: String
+  - displayOrder: Int
+  - isActive: Boolean
+  - imageUrl: String
+  + create(data): MenuCategory
+  + update(data): MenuCategory
+  + delete(): void
+  + reorder(newOrder): void
+  + getItems(): List<MenuItem>
+  + activate(): void
+  + deactivate(): void
+  + getByRestaurant(restaurantId): List<MenuCategory>
+}
+class MenuItem {
+  - menuItemId: String <<PK>>
+  - categoryId: String <<FK>>
+  - name: String
+  - description: String
+  - price: Float
+  - discountPrice: Float
+  - imageUrl: String
+  - isAvailable: Boolean
+  - prepTimeMinutes: Int
+  - calories: Int
+  - ingredients: String[]
+  - allergens: String[]
+  - tags: String[]
+  - isVegetarian: Boolean
+  - isVegan: Boolean
+  - isGlutenFree: Boolean
+  - spicyLevel: Int
+  + create(data): MenuItem
+  + update(data): MenuItem
+  + delete(): void
+  + toggleAvailability(): void
+  + updatePrice(newPrice): void
+  + setDiscount(discountPrice): void
+  + removeDiscount(): void
+  + uploadImage(file): String
+  + addTag(tag): void
+  + removeTag(tag): void
+  + getByCategory(categoryId): List<MenuItem>
+  + search(query): List<MenuItem>
+}
+class Cart {
+  - cartId: String <<PK>>
+  - clientId: String <<FK>>
+  - restaurantId: String <<FK>>
+  - totalAmount: Float
+  - itemCount: Int
+  - createdAt: Date
+  - updatedAt: Date
+  - expiresAt: Date
+  + create(clientId, restaurantId): Cart
+  + addItem(menuItemId, quantity): CartItem
+  + updateItem(itemId, quantity): CartItem
+  + removeItem(itemId): void
+  + clear(): void
+  + calculateTotal(): Float
+  + validateItems(): Boolean
+  + applyPromo(promoCode): Float
+  + removePromo(): void
+  + convertToOrder(addressId, paymentMethod): Order
+  + getItems(): List<CartItem>
+  + getByClient(clientId): Cart
+  + checkExpiry(): Boolean
+  + extend(): void
+}
+class CartItem {
+  - itemId: String <<PK>>
+  - cartId: String <<FK>>
+  - menuItemId: String <<FK>>
+  - quantity: Int
+  - priceAtAdd: Float
+  - subtotal: Float
+  - specialInstructions: String
+  - addons: JSON
+  + create(data): CartItem
+  + update(quantity): CartItem
+  + delete(): void
+  + calculateSubtotal(): Float
+  + addInstructions(instructions): void
+  + addAddon(addon): void
+  + removeAddon(addonId): void
+  + getByCart(cartId): List<CartItem>
+}
+class Order {
+  - orderId: String <<PK>>
+  - clientId: String <<FK>>
+  - restaurantId: String <<FK>>
+  - driverId: String <<FK>>
+  - addressId: String <<FK>>
+  - deliveryFee: Float
+  - subtotal: Float
+  - discountAmount: Float
+  - taxAmount: Float
+  - totalAmount: Float
+  - status: Enum{Pending, Accepted, Preparing, ReadyForPickup, OutForDelivery, Delivered, Cancelled}
+  - paymentMethod: Enum{COD, Card, BankTransfer}
+  - paymentStatus: Enum{Pending, Paid, Failed, Refunded}
+  - createdAt: Date
+  - acceptedAt: Date
+  - preparingAt: Date
+  - readyAt: Date
+  - pickedUpAt: Date
+  - deliveredAt: Date
+  - cancelledAt: Date
+  - estimatedDeliveryTime: Date
+  - actualDeliveryTime: Date
+  - cancellationReason: String
+  - cancelledBy: String
+  - specialInstructions: String
+  - deliveryInstructions: String
+  + create(data): Order
+  + place(cartId, addressId, paymentMethod, promoCode): Order
+  + accept(restaurantId): void
+  + reject(restaurantId, reason): void
+  + startPreparing(): void
+  + markReady(): void
+  + assignDriver(driverId): void
+  + markPickedUp(driverId): void
+  + markDelivered(driverId): void
+  + markDeliveredByDriver(driverId): void
+  + confirmCashPayment(driverId, amount): void
+  + cancel(userId, reason): Boolean
+  + refund(reason): Refund
+  + updateStatus(newStatus, userId): void
+  + updatePaymentStatus(newStatus): void
+  + calculateTotal(): Float
+  + calculateTax(): Float
+  + applyDiscount(amount): void
+  + getTimeline(): List<StatusHistory>
+  + canBeCancelled(): Boolean
+  + getCancellationPenalty(): Float
+  + generateInvoice(): Invoice
+  + sendNotification(type, message): void
+  + isCOD(): Boolean
+  + requiresCashCollection(): Boolean
+  + getById(orderId): Order
+  + getByClient(clientId): List<Order>
+  + getByRestaurant(restaurantId): List<Order>
+  + getByDriver(driverId): List<Order>
+}
+class OrderItem {
+  - orderItemId: String <<PK>>
+  - orderId: String <<FK>>
+  - menuItemId: String <<FK>>
+  - name: String
+  - quantity: Int
+  - unitPrice: Float
+  - totalPrice: Float
+  - specialInstructions: String
+  - addons: JSON
+  + create(data): OrderItem
+  + update(data): OrderItem
+  + delete(): void
+  + calculateTotal(): Float
+  + getMenuItem(): MenuItem
+  + getByOrder(orderId): List<OrderItem>
+}
+class OrderStatusHistory {
+  - historyId: String <<PK>>
+  - orderId: String <<FK>>
+  - status: String
+  - previousStatus: String
+  - changedAt: Date
+  - changedBy: String <<FK>>
+  - notes: String
+  - location: String
+  + create(orderId, status, userId): OrderStatusHistory
+  + getTimeline(orderId): List<OrderStatusHistory>
+  + getByOrder(orderId): List<OrderStatusHistory>
+}
+class DeliveryRequest {
+  - requestId: String <<PK>>
+  - orderId: String <<FK>>
+  - driverId: String <<FK>>
+  - status: Enum{Pending, Accepted, Rejected, PickedUp, Delivered, Cancelled, Expired}
+  - distanceKm: Float
+  - estimatedDurationMin: Float
+  - estimatedEarning: Float
+  - priority: Int
+  - assignedAt: Date
+  - expiresAt: Date
+  - acceptedAt: Date
+  - rejectedAt: Date
+  - pickedUpAt: Date
+  - deliveredAt: Date
+  - rejectionReason: String
+  - requiresCashCollection: Boolean
+  - cashCollected: Boolean
+  + create(orderId, driverId): DeliveryRequest
+  + accept(driverId): void
+  + reject(driverId, reason): void
+  + markPickedUp(): void
+  + markDelivered(): void
+  + markCashCollected(amount): void
+  + cancel(): void
+  + expire(): void
+  + calculateEarning(): Float
+  + getETA(): Int
+  + getByOrder(orderId): DeliveryRequest
+  + getByDriver(driverId): List<DeliveryRequest>
+  + getPending(driverId): List<DeliveryRequest>
+}
+class RealTimeTracking {
+  - trackingId: String <<PK>>
+  - deliveryRequestId: String <<FK>>
+  - latitude: Float
+  - longitude: Float
+  - speed: Float
+  - heading: Float
+  - accuracy: Float
+  - timestamp: Date
+  - batteryLevel: Int
+  + create(requestId, lat, lon, speed, heading): RealTimeTracking
+  + getLatestPosition(requestId): RealTimeTracking
+  + getRoute(requestId): List<RealTimeTracking>
+  + calculateETA(currentLat, currentLon, destLat, destLon): Int
+  + getDistanceToDestination(): Float
+  + getByDeliveryRequest(requestId): List<RealTimeTracking>
+}
+class DriverEarning {
+  - earningId: String <<PK>>
+  - driverId: String <<FK>>
+  - orderId: String <<FK>>
+  - baseFare: Float
+  - distancePay: Float
+  - timePay: Float
+  - peakHourBonus: Float
+  - weatherBonus: Float
+  - bonus: Float
+  - totalAmount: Float
+  - platformFee: Float
+  - netAmount: Float
+  - status: Enum{Pending, Paid, Disputed}
+  - paymentMethod: Enum{COD, BankTransfer}
+  - createdAt: Date
+  - paidAt: Date
+  + create(orderId, driverId): DriverEarning
+  + calculate(distance, duration): Float
+  + applyBonus(bonusType, amount): void
+  + markAsPaid(): void
+  + markAsPaidFromCOD(): void
+  + dispute(reason): void
+  + getTotalEarnings(driverId, period): Float
+  + getEarningBreakdown(): JSON
+  + getByDriver(driverId): List<DriverEarning>
+  + getByOrder(orderId): DriverEarning
+  + getPendingCODEarnings(driverId): List<DriverEarning>
+}
+class Vehicle {
+  - vehicleId: String <<PK>>
+  - driverId: String <<FK>>
+  - type: Enum{Bike, Motorcycle, Car, Scooter}
+  - plateNumber: String <<unique>>
+  - model: String
+  - color: String
+  - year: Int
+  - insuranceExpiry: Date
+  - registrationExpiry: Date
+  - isActive: Boolean
+  - isPrimary: Boolean
+  + create(data): Vehicle
+  + update(data): Vehicle
+  + delete(): void
+  + activate(): void
+  + deactivate(): void
+  + setPrimary(): void
+  + checkInsuranceExpiry(): Boolean
+  + checkRegistrationExpiry(): Boolean
+  + getByDriver(driverId): List<Vehicle>
+}
+class DriverDocument {
+  - documentId: String <<PK>>
+  - driverId: String <<FK>>
+  - type: Enum{IDCard, License, Insurance, VehicleReg, BackgroundCheck}
+  - url: String
+  - status: Enum{Pending, Verified, Rejected, Expired}
+  - expiryDate: Date
+  - uploadedAt: Date
+  - verifiedAt: Date
+  - verifiedBy: String
+  - rejectionReason: String
+  + upload(driverId, type, file): DriverDocument
+  + verify(adminId): void
+  + reject(adminId, reason): void
+  + checkExpiry(): Boolean
+  + requestRenewal(): void
+  + getByDriver(driverId): List<DriverDocument>
+  + getPending(): List<DriverDocument>
+}
+class Payment {
+  - paymentId: String <<PK>>
+  - orderId: String <<FK>>
+  - method: Enum{COD, Card, BankTransfer}
+  - status: Enum{Pending, Authorized, Captured, Failed, Refunded, Cancelled}
+  - amount: Float
+  - transactionId: String
+  - gatewayResponse: JSON
+  - failureReason: String
+  - createdAt: Date
+  - authorizedAt: Date
+  - capturedAt: Date
+  - failedAt: Date
+  - paidAt: Date
+  + create(orderId, method, amount): Payment
+  + authorize(): Boolean
+  + capture(): Boolean
+  + captureCOD(driverId): Boolean
+  + cancel(): void
+  + refund(amount, reason): Refund
+  + retry(): Boolean
+  + processCardPayment(cardDetails): Boolean
+  + processCOD(): void
+  + markCODAsCollected(collectionId): void
+  + getStatus(): String
+  + sendReceipt(email): void
+  + isCOD(): Boolean
+  + getByOrder(orderId): Payment
+}
+class CashCollection {
+  - collectionId: String <<PK>>
+  - orderId: String <<FK>>
+  - driverId: String <<FK>>
+  - paymentId: String <<FK>>
+  - amountCollected: Float
+  - collectedAt: Date
+  - verifiedAt: Date
+  - verifiedBy: String
+  - status: Enum{Collected, Verified, Deposited, Disputed}
+  - depositedAt: Date
+  - depositReference: String
+  - notes: String
+  + create(orderId, driverId, amount): CashCollection
+  + verify(adminId): void
+  + markAsDeposited(reference): void
+  + dispute(reason): void
+  + resolve(resolution): void
+  + getByDriver(driverId): List<CashCollection>
+  + getByOrder(orderId): CashCollection
+  + getPendingDeposits(driverId): List<CashCollection>
+  + getTotalCollected(driverId, period): Float
+}
+class Refund {
+  - refundId: String <<PK>>
+  - orderId: String <<FK>>
+  - paymentId: String <<FK>>
+  - amount: Float
+  - reason: String
+  - status: Enum{Pending, Processing, Processed, Failed, Cancelled}
+  - refundMethod: Enum{Original, BankTransfer, Cash}
+  - processedAt: Date
+  - failureReason: String
+  - approvedBy: String
+  + create(orderId, amount, reason): Refund
+  + process(): Boolean
+  + processCODRefund(): Boolean
+  + approve(adminId): void
+  + reject(adminId, reason): void
+  + cancel(): void
+  + getStatus(): String
+  + notifyClient(): void
+  + getByOrder(orderId): Refund
+  + getByPayment(paymentId): Refund
+}
+class Invoice {
+  - invoiceId: String <<PK>>
+  - orderId: String <<FK>>
+  - invoiceNumber: String <<unique>>
+  - pdfUrl: String
+  - amount: Float
+  - taxAmount: Float
+  - subtotal: Float
+  - paymentMethod: String
+  - issuedAt: Date
+  - dueDate: Date
+  - paidAt: Date
+  - status: Enum{Draft, Issued, Paid, Cancelled}
+  + generate(orderId): Invoice
+  + generatePDF(): String
+  + send(email): void
+  + download(): Blob
+  + cancel(): void
+  + markAsPaid(): void
+  + getByOrder(orderId): Invoice
+  + getByNumber(invoiceNumber): Invoice
+}
+class Commission {
+  - commissionId: String <<PK>>
+  - entityType: Enum{Restaurant, Driver}
+  - entityId: String
+  - orderId: String <<FK>>
+  - amount: Float
+  - rateUsed: Float
+  - baseAmount: Float
+  - status: Enum{Pending, Paid, Overdue, Waived, Disputed}
+  - dueDate: Date
+  - paidAt: Date
+  - createdAt: Date
+  - notes: String
+  + create(entityType, entityId, orderId, amount): Commission
+  + calculate(orderAmount, rate): Float
+  + markAsPaid(): void
+  + markAsOverdue(): void
+  + waive(adminId, reason): void
+  + dispute(reason): void
+  + blockEntity(): void
+  + getTotalDue(entityType, entityId): Float
+  + getOverdueCommissions(entityType, entityId): List<Commission>
+  + sendReminder(): void
+  + getByEntity(entityType, entityId): List<Commission>
+  + getByOrder(orderId): List<Commission>
+}
+class RestaurantPayout {
+  - payoutId: String <<PK>>
+  - restaurantId: String <<FK>>
+  - periodStart: Date
+  - periodEnd: Date
+  - totalOrders: Int
+  - totalSales: Float
+  - totalCommission: Float
+  - adjustments: Float
+  - netAmount: Float
+  - status: Enum{Pending, Processing, Paid, Failed, Cancelled}
+  - transactionReference: String
+  - bankAccount: String
+  - paidAt: Date
+  - failureReason: String
+  + create(restaurantId, periodStart, periodEnd): RestaurantPayout
+  + calculate(): Float
+  + process(): Boolean
+  + markAsSent(): void
+  + markAsFailed(reason): void
+  + cancel(): void
+  + retry(): Boolean
+  + getPayoutHistory(restaurantId): List<RestaurantPayout>
+  + getByRestaurant(restaurantId): List<RestaurantPayout>
+  + getPending(): List<RestaurantPayout>
+}
+class Address {
+  - addressId: String <<PK>>
+  - clientId: String <<FK>>
+  - label: String
+  - street: String
+  - building: String
+  - floor: String
+  - apartment: String
+  - wilaya: String
+  - commune: String
+  - postalCode: String
+  - latitude: Float
+  - longitude: Float
+  - details: String
+  - isDefault: Boolean
+  - isActive: Boolean
+  + create(clientId, data): Address
+  + update(data): Address
+  + delete(): void
+  + setAsDefault(): void
+  + validate(): Boolean
+  + calculateDistance(lat, lon): Float
+  + geocode(): Coordinates
+  + getByClient(clientId): List<Address>
+  + getDefault(clientId): Address
+}
+class Rating {
+  - ratingId: String <<PK>>
+  - orderId: String <<FK>>
+  - fromUserId: String <<FK>>
+  - toUserId: String <<FK>>
+  - targetType: Enum{Restaurant, Driver}
+  - score: Int
+  - comment: String
+  - tags: String[]
+  - images: String[]
+  - isVerified: Boolean
+  - createdAt: Date
+  - updatedAt: Date
+  - response: String
+  - respondedAt: Date
+  + create(orderId, fromUserId, toUserId, targetType, score): Rating
+  + update(score, comment): Rating
+  + delete(): void
+  + addComment(comment): void
+  + addTags(tags): void
+  + uploadImages(images): void
+  + respond(response): void
+  + flag(reason): void
+  + verify(): void
+  + getAverageRating(targetType, targetId): Float
+  + getRatingDistribution(targetType, targetId): JSON
+  + getByOrder(orderId): List<Rating>
+  + getByUser(userId): List<Rating>
+}
+class Promotion {
+  - promoId: String <<PK>>
+  - code: String <<unique>>
+  - description: String
+  - discountType: Enum{Percentage, Fixed, FreeDelivery, BuyOneGetOne}
+  - discountValue: Float
+  - maxDiscount: Float
+  - minOrderValue: Float
+  - validFrom: Date
+  - validTo: Date
+  - usageLimit: Int
+  - usageLimitPerUser: Int
+  - usageCount: Int
+  - isActive: Boolean
+  - applicableRestaurants: String[]
+  - applicableCategories: String[]
+  - targetUserSegment: String
+  - applicablePaymentMethods: String[]
+  + create(data): Promotion
+  + update(data): Promotion
+  + delete(): void
+  + activate(): void
+  + deactivate(): void
+  + validate(clientId, orderAmount, paymentMethod): Boolean
+  + apply(orderId): Float
+  + incrementUsage(): void
+  + decrementUsage(): void
+  + getUsageStats(): JSON
+  + checkExpiry(): Boolean
+  + getByCode(code): Promotion
+  + getActive(): List<Promotion>
+}
+class PromoUsage {
+  - usageId: String <<PK>>
+  - promoId: String <<FK>>
+  - clientId: String <<FK>>
+  - orderId: String <<FK>>
+  - discountAmount: Float
+  - originalAmount: Float
+  - finalAmount: Float
+  - usedAt: Date
+  + create(promoId, clientId, orderId, discountAmount): PromoUsage
+  + delete(): void
+  + getUsageHistory(clientId): List<PromoUsage>
+  + getPromoStats(promoId): JSON
+  + getByClient(clientId): List<PromoUsage>
+  + getByPromo(promoId): List<PromoUsage>
+}
+class Notification {
+  - notificationId: String <<PK>>
+  - userId: String <<FK>>
+  - type: Enum{OrderUpdate, Promo, System, Payment, Delivery, CODReminder}
+  - title: String
+  - body: String
+  - data: JSON
+  - imageUrl: String
+  - actionUrl: String
+  - isRead: Boolean
+  - isPush: Boolean
+  - isEmail: Boolean
+  - isSMS: Boolean
+  - sentAt: Date
+  - readAt: Date
+  - deliveryStatus: Enum{Pending, Sent, Delivered, Failed}
+  + create(userId, type, title, body): Notification
+  + send(): Boolean
+  + markAsRead(): void
+  + markAllAsRead(userId): void
+  + delete(): void
+  + sendPush(): Boolean
+  + sendEmail(): Boolean
+  + sendSMS(): Boolean
+  + getUnreadCount(userId): Int
+  + getByUser(userId): List<Notification>
+  + deleteOld(days): void
+}
+class SupportTicket {
+  - ticketId: String <<PK>>
+  - userId: String <<FK>>
+  - orderId: String <<FK>>
+  - subject: String
+  - message: String
+  - category: Enum{Order, Payment, Delivery, Account, Technical, COD, Other}
+  - status: Enum{Open, InProgress, Resolved, Closed, Escalated}
+  - priority: Enum{Low, Medium, High, Urgent}
+  - assignedTo: String
+  - createdAt: Date
+  - updatedAt: Date
+  - resolvedAt: Date
+  - closedAt: Date
+  - resolution: String
+  - attachments: String[]
+  + create(userId, subject, message, category): SupportTicket
+  + update(status, message): SupportTicket
+  + delete(): void
+  + assign(adminId): void
+  + escalate(reason): void
+  + resolve(resolution): void
+  + close(): void
+  + reopen(reason): void
+  + addReply(userId, message): void
+  + uploadAttachment(file): String
+  + getTicketHistory(userId): List<SupportTicket>
+  + getByUser(userId): List<SupportTicket>
+  + getByStatus(status): List<SupportTicket>
+}
+class SearchHistory {
+  - historyId: String <<PK>>
+  - clientId: String <<FK>>
+  - query: String
+  - searchType: Enum{Restaurant, MenuItem, Cuisine}
+  - searchFilters: JSON
+  - resultCount: Int
+  - clickedResultId: String
+  - searchedAt: Date
+  + create(clientId, query, filters): SearchHistory
+  + delete(): void
+  + getRecentSearches(clientId, limit): List<SearchHistory>
+  + getPopularSearches(period): List<String>
+  + getTrendingSearches(): List<String>
+  + clearHistory(clientId): void
+  + getByClient(clientId): List<SearchHistory>
+}
+class Banner {
+  - bannerId: String <<PK>>
+  - imageUrl: String
+  - mobileImageUrl: String
+  - title: String
+  - description: String
+  - actionUrl: String
+  - actionType: Enum{Restaurant, Promotion, Category, External}
+  - targetAudience: String
+  - displayOrder: Int
+  - isActive: Boolean
+  - startDate: Date
+  - endDate: Date
+  - clickCount: Int
+  - impressionCount: Int
+  - createdAt: Date
+  + create(data): Banner
+  + update(data): Banner
+  + delete(): void
+  + activate(): void
+  + deactivate(): void
+  + incrementClick(): void
+  + incrementImpression(): void
+  + getActiveBanners(): List<Banner>
+  + getStats(): JSON
+  + reorder(newOrder): void
+}
+class AnalyticsReport {
+  - reportId: String <<PK>>
+  - reportType: Enum{Daily, Weekly, Monthly, Custom}
+  - periodStart: Date
+  - periodEnd: Date
+  - totalOrders: Int
+  - totalRevenue: Float
+  - totalCommission: Float
+  - averageOrderValue: Float
+  - totalCustomers: Int
+  - newCustomers: Int
+  - activeDrivers: Int
+  - activeRestaurants: Int
+  - topRestaurants: JSON
+  - topDrivers: JSON
+  - topCustomers: JSON
+  - cancelledOrders: Int
+  - cancellationRate: Float
+  - averageDeliveryTime: Int
+  - customerSatisfaction: Float
+  - codOrdersCount: Int
+  - codOrdersPercentage: Float
+  - generatedAt: Date
+  - generatedBy: String
+  + generate(type, periodStart, periodEnd): AnalyticsReport
+  + export(format): File
+  + schedule(frequency): void
+  + getMetrics(): JSON
+  + compareWithPrevious(): JSON
+  + getById(reportId): AnalyticsReport
+  + getByType(type): List<AnalyticsReport>
+}
+User <|-- Admin
+User <|-- Client
+User <|-- RestaurantOwner
+User <|-- Driver
+User "1" -- "0..1" UserProfile : has >
+User "1" -- "0..*" Notification : receives >
+User "1" -- "0..*" SupportTicket : creates >
+Client "1" -- "0..*" Address : owns >
+Client "1" -- "0..*" SearchHistory : searches >
+Client "1" -- "0..1" Cart : has active >
+Client "1" -- "0..*" Order : places >
+Client "1" -- "0..*" PromoUsage : uses >
+RestaurantOwner "1" -- "0..*" Restaurant : owns >
+Restaurant "1" -- "0..*" MenuCategory : contains >
+MenuCategory "1" -- "0..*" MenuItem : has >
+Restaurant "1" -- "0..*" RestaurantSchedule : schedules >
+Restaurant "1" -- "0..*" RestaurantPayout : receives >
+Restaurant "1" -- "0..*" Cart : source of >
+Cart "1" -- "1..*" CartItem : contains >
+MenuItem "1" -- "0..*" CartItem : added to >
+Restaurant "1" -- "0..*" Order : receives >
+Address "1" -- "0..*" Order : delivers to >
+Order "1" *-- "1..*" OrderItem : contains >
+MenuItem "1" -- "0..*" OrderItem : ordered as >
+Order "1" *-- "1..*" OrderStatusHistory : tracks >
+Driver "1" -- "0..*" Order : delivers >
+Order "1" -- "0..1" DeliveryRequest : triggers >
+Driver "1" -- "0..*" DeliveryRequest : receives >
+DeliveryRequest "1" -- "0..*" RealTimeTracking : tracked by >
+Driver "1" -- "0..*" Vehicle : owns >
+Driver "1" -- "0..*" DriverDocument : uploads >
+Order "1" -- "1" Payment : paid via >
+Order "1" -- "0..1" Refund : refunded >
+Payment "1" -- "0..1" Refund : generates >
+Order "1" -- "0..1" Invoice : billed as >
+Order "1" -- "0..*" DriverEarning : generates >
+Driver "1" -- "0..*" DriverEarning : earns >
+Order "1" -- "0..*" Commission : incurs >
+Order "1" -- "0..1" CashCollection : collected via >
+Driver "1" -- "0..*" CashCollection : collects >
+Payment "1" -- "0..1" CashCollection : verified by >
+Promotion "1" -- "0..*" PromoUsage : used in >
+Order "1" -- "0..1" PromoUsage : applies >
+Order "1" -- "0..*" Rating : reviewed in >
+User "1" -- "0..*" Rating : writes >
+User "1" -- "0..*" Rating : receives >
+Order "0..1" -- "0..*" SupportTicket : related to >
+@enduml
