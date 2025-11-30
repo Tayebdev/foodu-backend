@@ -42,9 +42,6 @@ class UserProfile {
   - language: String
   - timezone: String
   - notificationSettings: JSON
-  + create(userId, data): UserProfile
-  + update(data): UserProfile
-  + delete(): void
   + getPreferences(): JSON
   + updatePreferences(preferences): void
   + getByUserId(userId): UserProfile
@@ -55,7 +52,6 @@ class Admin {
   - permissions: String[]
   - level: Enum{SuperAdmin, Moderator, Support}
   - lastActivityAt: Date
-  + create(userId, level): Admin
   + banUser(userId, reason): void
   + unbanUser(userId): void
   + approveRestaurant(restaurantId): void
@@ -80,7 +76,6 @@ class Client {
   - totalSpent: Float
   - favoriteRestaurants: String[]
   - membershipTier: Enum{Bronze, Silver, Gold, Platinum}
-  + create(userId): Client
   + placeOrder(cartId, addressId, paymentMethod): Order
   + viewOrderHistory(filters): List<Order>
   + trackOrder(orderId): TrackingInfo
@@ -106,7 +101,6 @@ class RestaurantOwner {
   - isActive: Boolean
   - totalRestaurants: Int
   - businessLicense: String
-  + create(userId): RestaurantOwner
   + registerRestaurant(data): Restaurant
   + updateRestaurant(restaurantId, data): Restaurant
   + deleteRestaurant(restaurantId): void
@@ -140,7 +134,6 @@ class Driver {
   - activeDeliveryId: String
   - lastLocationUpdate: Date
   - cashOnHand: Float
-  + create(userId): Driver
   + toggleAvailability(status): void
   + acceptDeliveryRequest(requestId): void
   + rejectDeliveryRequest(requestId, reason): void
@@ -186,9 +179,6 @@ class Restaurant {
   - isBlocked: Boolean
   - isFeatured: Boolean
   - acceptsCOD: Boolean
-  + create(data): Restaurant
-  + update(data): Restaurant
-  + delete(): void
   + updateStatus(status): void
   + acceptOrder(orderId): void
   + rejectOrder(orderId, reason): void
@@ -215,9 +205,6 @@ class RestaurantSchedule {
   - closeTime: Time
   - isClosed: Boolean
   - isHoliday: Boolean
-  + create(data): RestaurantSchedule
-  + update(data): RestaurantSchedule
-  + delete(): void
   + isOpenNow(): Boolean
   + getNextOpenTime(): Time
   + getByRestaurant(restaurantId): List<RestaurantSchedule>
@@ -231,9 +218,6 @@ class MenuCategory {
   - displayOrder: Int
   - isActive: Boolean
   - imageUrl: String
-  + create(data): MenuCategory
-  + update(data): MenuCategory
-  + delete(): void
   + reorder(newOrder): void
   + getItems(): List<MenuItem>
   + activate(): void
@@ -258,9 +242,6 @@ class MenuItem {
   - isVegan: Boolean
   - isGlutenFree: Boolean
   - spicyLevel: Int
-  + create(data): MenuItem
-  + update(data): MenuItem
-  + delete(): void
   + toggleAvailability(): void
   + updatePrice(newPrice): void
   + setDiscount(discountPrice): void
@@ -304,9 +285,7 @@ class CartItem {
   - subtotal: Float
   - specialInstructions: String
   - addons: JSON
-  + create(data): CartItem
   + update(quantity): CartItem
-  + delete(): void
   + calculateSubtotal(): Float
   + addInstructions(instructions): void
   + addAddon(addon): void
@@ -340,7 +319,6 @@ class Order {
   - cancelledBy: String
   - specialInstructions: String
   - deliveryInstructions: String
-  + create(data): Order
   + place(cartId, addressId, paymentMethod, promoCode): Order
   + accept(restaurantId): void
   + reject(restaurantId, reason): void
@@ -380,9 +358,6 @@ class OrderItem {
   - totalPrice: Float
   - specialInstructions: String
   - addons: JSON
-  + create(data): OrderItem
-  + update(data): OrderItem
-  + delete(): void
   + calculateTotal(): Float
   + getMenuItem(): MenuItem
   + getByOrder(orderId): List<OrderItem>
@@ -396,7 +371,6 @@ class OrderStatusHistory {
   - changedBy: String <<FK>>
   - notes: String
   - location: String
-  + create(orderId, status, userId): OrderStatusHistory
   + getTimeline(orderId): List<OrderStatusHistory>
   + getByOrder(orderId): List<OrderStatusHistory>
 }
@@ -418,7 +392,6 @@ class DeliveryRequest {
   - rejectionReason: String
   - requiresCashCollection: Boolean
   - cashCollected: Boolean
-  + create(orderId, driverId): DeliveryRequest
   + accept(driverId): void
   + reject(driverId, reason): void
   + markPickedUp(): void
@@ -442,7 +415,6 @@ class RealTimeTracking {
   - accuracy: Float
   - timestamp: Date
   - batteryLevel: Int
-  + create(requestId, lat, lon, speed, heading): RealTimeTracking
   + getLatestPosition(requestId): RealTimeTracking
   + getRoute(requestId): List<RealTimeTracking>
   + calculateETA(currentLat, currentLon, destLat, destLon): Int
@@ -466,7 +438,6 @@ class DriverEarning {
   - paymentMethod: Enum{COD, BankTransfer}
   - createdAt: Date
   - paidAt: Date
-  + create(orderId, driverId): DriverEarning
   + calculate(distance, duration): Float
   + applyBonus(bonusType, amount): void
   + markAsPaid(): void
@@ -490,9 +461,6 @@ class Vehicle {
   - registrationExpiry: Date
   - isActive: Boolean
   - isPrimary: Boolean
-  + create(data): Vehicle
-  + update(data): Vehicle
-  + delete(): void
   + activate(): void
   + deactivate(): void
   + setPrimary(): void
@@ -533,7 +501,6 @@ class Payment {
   - capturedAt: Date
   - failedAt: Date
   - paidAt: Date
-  + create(orderId, method, amount): Payment
   + authorize(): Boolean
   + capture(): Boolean
   + captureCOD(driverId): Boolean
@@ -561,7 +528,6 @@ class CashCollection {
   - depositedAt: Date
   - depositReference: String
   - notes: String
-  + create(orderId, driverId, amount): CashCollection
   + verify(adminId): void
   + markAsDeposited(reference): void
   + dispute(reason): void
@@ -582,7 +548,6 @@ class Refund {
   - processedAt: Date
   - failureReason: String
   - approvedBy: String
-  + create(orderId, amount, reason): Refund
   + process(): Boolean
   + processCODRefund(): Boolean
   + approve(adminId): void
@@ -656,7 +621,6 @@ class RestaurantPayout {
   - bankAccount: String
   - paidAt: Date
   - failureReason: String
-  + create(restaurantId, periodStart, periodEnd): RestaurantPayout
   + calculate(): Float
   + process(): Boolean
   + markAsSent(): void
@@ -683,9 +647,6 @@ class Address {
   - details: String
   - isDefault: Boolean
   - isActive: Boolean
-  + create(clientId, data): Address
-  + update(data): Address
-  + delete(): void
   + setAsDefault(): void
   + validate(): Boolean
   + calculateDistance(lat, lon): Float
@@ -708,9 +669,6 @@ class Rating {
   - updatedAt: Date
   - response: String
   - respondedAt: Date
-  + create(orderId, fromUserId, toUserId, targetType, score): Rating
-  + update(score, comment): Rating
-  + delete(): void
   + addComment(comment): void
   + addTags(tags): void
   + uploadImages(images): void
@@ -740,9 +698,6 @@ class Promotion {
   - applicableCategories: String[]
   - targetUserSegment: String
   - applicablePaymentMethods: String[]
-  + create(data): Promotion
-  + update(data): Promotion
-  + delete(): void
   + activate(): void
   + deactivate(): void
   + validate(clientId, orderAmount, paymentMethod): Boolean
@@ -763,8 +718,6 @@ class PromoUsage {
   - originalAmount: Float
   - finalAmount: Float
   - usedAt: Date
-  + create(promoId, clientId, orderId, discountAmount): PromoUsage
-  + delete(): void
   + getUsageHistory(clientId): List<PromoUsage>
   + getPromoStats(promoId): JSON
   + getByClient(clientId): List<PromoUsage>
@@ -786,11 +739,9 @@ class Notification {
   - sentAt: Date
   - readAt: Date
   - deliveryStatus: Enum{Pending, Sent, Delivered, Failed}
-  + create(userId, type, title, body): Notification
   + send(): Boolean
   + markAsRead(): void
   + markAllAsRead(userId): void
-  + delete(): void
   + sendPush(): Boolean
   + sendEmail(): Boolean
   + sendSMS(): Boolean
@@ -814,9 +765,6 @@ class SupportTicket {
   - closedAt: Date
   - resolution: String
   - attachments: String[]
-  + create(userId, subject, message, category): SupportTicket
-  + update(status, message): SupportTicket
-  + delete(): void
   + assign(adminId): void
   + escalate(reason): void
   + resolve(resolution): void
@@ -837,8 +785,6 @@ class SearchHistory {
   - resultCount: Int
   - clickedResultId: String
   - searchedAt: Date
-  + create(clientId, query, filters): SearchHistory
-  + delete(): void
   + getRecentSearches(clientId, limit): List<SearchHistory>
   + getPopularSearches(period): List<String>
   + getTrendingSearches(): List<String>
@@ -861,9 +807,6 @@ class Banner {
   - clickCount: Int
   - impressionCount: Int
   - createdAt: Date
-  + create(data): Banner
-  + update(data): Banner
-  + delete(): void
   + activate(): void
   + deactivate(): void
   + incrementClick(): void
