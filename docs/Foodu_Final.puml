@@ -23,7 +23,6 @@ class User {
   + changePassword(oldPassword, newPassword): Boolean
   + resetPassword(token, newPassword): Boolean
   + verifyEmail(token): Boolean
-  + uploadAvatar(file): String
   + deleteAccount(): void
   + getById(userId): User
   + getByEmail(email): User
@@ -36,8 +35,6 @@ class User {
 class UserProfile {
   - profileId: String <<PK>>
   - userId: String <<FK>>
-  - gender: String
-  - dateOfBirth: Date
   - preferences: JSON
   - language: String
   - timezone: String
@@ -157,7 +154,6 @@ class Restaurant {
   - restaurantId: String <<PK>>
   - ownerId: String <<FK>>
   - name: String
-  - slug: String <<unique>>
   - logoUrl: String
   - bannerUrl: String
   - phone: String
@@ -204,11 +200,9 @@ class RestaurantSchedule {
   - openTime: Time
   - closeTime: Time
   - isClosed: Boolean
-  - isHoliday: Boolean
   + isOpenNow(): Boolean
   + getNextOpenTime(): Time
   + getByRestaurant(restaurantId): List<RestaurantSchedule>
-  + setHoliday(date): void
 }
 class MenuCategory {
   - categoryId: String <<PK>>
@@ -234,14 +228,8 @@ class MenuItem {
   - imageUrl: String
   - isAvailable: Boolean
   - prepTimeMinutes: Int
-  - calories: Int
   - ingredients: String[]
   - allergens: String[]
-  - tags: String[]
-  - isVegetarian: Boolean
-  - isVegan: Boolean
-  - isGlutenFree: Boolean
-  - spicyLevel: Int
   + toggleAvailability(): void
   + updatePrice(newPrice): void
   + setDiscount(discountPrice): void
@@ -455,8 +443,6 @@ class Vehicle {
   - type: Enum{Bike, Motorcycle, Car, Scooter}
   - plateNumber: String <<unique>>
   - model: String
-  - color: String
-  - year: Int
   - insuranceExpiry: Date
   - registrationExpiry: Date
   - isActive: Boolean
@@ -867,7 +853,7 @@ Restaurant "1" -- "0..*" RestaurantPayout : receives >
 Restaurant "1" -- "0..*" Cart : source of >
 Cart "1" -- "1..*" CartItem : contains >
 MenuItem "1" -- "0..*" CartItem : added to >
-Restaurant "1" -- "0..*" Order : receives >
+Restaurant "1" -- "0..*" Order : places >
 Address "1" -- "0..*" Order : delivers to >
 Order "1" *-- "1..*" OrderItem : contains >
 MenuItem "1" -- "0..*" OrderItem : ordered as >
