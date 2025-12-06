@@ -668,7 +668,6 @@ class Rating {
 }
 class Promotion {
   - promoId: String <<PK>>
-  - code: String <<unique>>
   - description: String
   - discountType: Enum{Percentage, Fixed, FreeDelivery, BuyOneGetOne}
   - discountValue: Float
@@ -692,7 +691,6 @@ class Promotion {
   + decrementUsage(): void
   + getUsageStats(): JSON
   + checkExpiry(): Boolean
-  + getByCode(code): Promotion
   + getActive(): List<Promotion>
 }
 class PromoUsage {
