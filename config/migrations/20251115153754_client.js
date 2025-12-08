@@ -7,6 +7,9 @@ exports.up = function (knex) {
     table.increments("id").primary();
     table.integer("userId").unsigned().notNullable();
     table.integer("loyaltyPoints").defaultTo(0);
+    table.integer("totalOrders").defaultTo(0);
+    table.float("totalSpent").defaultTo(0);
+    table.json("favoriteRestaurants").nullable();
 
     table
       .foreign("userId")
