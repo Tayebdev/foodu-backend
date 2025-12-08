@@ -22,6 +22,18 @@ class UserModel extends BaseModel {
     const result = await super.create(user);
     return result[0];
   }
+  async ban(id) {
+    return await db(this.tableName).where({ id }).update({ isBanned: true });
+  }
+  async unban(id) {
+    return await db(this.tableName).where({ id }).update({ isBanned: false });
+  }
+  async deactivate(id) {
+    return await db(this.tableName).where({ id }).update({ isActive: false });
+  }
+  async activate(id) {
+    return await db(this.tableName).where({ id }).update({ isActive: true });
+  }
 }
 
 module.exports = new UserModel();

@@ -10,12 +10,13 @@ exports.up = function (knex) {
     table.string("phone").notNullable().unique();
     table.string("password").notNullable();
     table.string("picture").nullable();
-    table.boolean("IsActive").defaultTo(true);
+    table.boolean("isActive").defaultTo(true);
     table.boolean("isBanned").defaultTo(false);
     table.boolean("verified").defaultTo(false);
     table.timestamp("createdAt").defaultTo(knex.fn.now());
     table.timestamp("updatedAt").defaultTo(knex.fn.now());
     table.timestamp("lastLogin").nullable();
+    table.string('verifyCode').nullable();
     table
       .enum("role", ["Admin", "Client", "RestaurantOwner", "Driver"])
       .notNullable()

@@ -1,6 +1,7 @@
 const UserModel = require("../models/user_model");
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
+const ErrorAPI = require("../utils/ErrorAppi");
 const { deleteOne, getAll, getOne, updateOne } = require("./factory_handler");
 
 const getAllUsers = getAll(UserModel, "user");
@@ -32,7 +33,7 @@ const createUser = asyncHandler(async (req, res, next) => {
   const { password, ...userData } = req.body;
   const salt = await bcrypt.genSalt(8);
   const hashedPassword = await bcrypt.hash(password, salt);
-  const user = await UserModel.create({
+  await UserModel.create({
     ...userData,
     password: hashedPassword,
   });
@@ -41,6 +42,50 @@ const createUser = asyncHandler(async (req, res, next) => {
     message: "User created successfully",
   });
 });
+const banUser = asyncHandler(async (req, res, next) => {
+  const user = await UserModel.ban(req.params.id);
+  if (!user) {
+    return next(new ErrorAPI(`User not found or could not be banned`, 401));
+  }
+  res.status(200).json({
+    status: "success",
+    message: "User has been banned",
+  });
+});
+const unbanUser = asyncHandler(async (req, res, next) => {
+  const user = await UserModel.unban(req.params.id);
+  if (!user) {
+    return next(new ErrorAPI(`User not found or could not be unbanned`, 401));
+  }
+  res.status(200).json({
+    status: "success",
+    message: "User has been unbanned",
+  });
+});
+const activateUser = asyncHandler(async (req, res, next) => {
+  const user = await UserModel.activate(req.params.id);
+  if (!user) {
+    return next(new ErrorAPI(`User not found or could not be activated`, 401));
+  }
+  res.status(200).json({
+    status: "success",
+    message: "User has been activated",
+  });
+});
+
+const deactivateUser = asyncHandler(async (req, res, next) => {
+  const user = await UserModel.deactivate(req.params.id);
+  if (!user) {
+    return next(
+      new ErrorAPI(`User not found or could not be deactivated`, 401)
+    );
+  }
+  res.status(200).json({
+    status: "success",
+    message: "User has been deactivated",
+  });
+});
+
 module.exports = {
   getAllUsers,
   createUser,
@@ -50,4 +95,8 @@ module.exports = {
   deleteUser,
   updateUser,
   changePasswordUser,
+  banUser,
+  unbanUser,
+  activateUser,
+  deactivateUser,
 };

@@ -17,6 +17,10 @@ const {
   deleteUser,
   updateUser,
   changePasswordUser,
+  activateUser,
+  deactivateUser,
+  banUser,
+  unbanUser,
 } = require("../controllers/user_controller");
 
 router.route("/").post(createUserValidator, createUser).get(getAllUsers);
@@ -28,4 +32,8 @@ router
 router.put("/:id/changePassword", changePasswordValidator, changePasswordUser);
 router.route("/phone/:phone").get(getByPhoneValidator, getUserByPhone);
 router.route("/email/:email").get(getByEmailValidator, getUserByEmail);
+router.route("/ban/:id").put(banUser);
+router.route("/unban/:id").put(unbanUser);
+router.route("/activate/:id").put(activateUser);
+router.route("/deactivate/:id").put(deactivateUser);
 module.exports = router;
