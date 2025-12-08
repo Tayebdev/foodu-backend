@@ -33,17 +33,6 @@ class User {
   + activate(): void
   + deactivate(): void
 }
-class UserProfile {
-  - profileId: String <<PK>>
-  - userId: String <<FK>>
-  - preferences: JSON
-  - language: String
-  - timezone: String
-  - notificationSettings: JSON
-  + getPreferences(): JSON
-  + updatePreferences(preferences): void
-  + getByUserId(userId): UserProfile
-}
 class Admin {
   - adminId: String <<PK>>
   - userId: String <<FK>>
@@ -52,19 +41,19 @@ class Admin {
   - lastActivityAt: Date
   + banUser(userId, reason): void
   + unbanUser(userId): void
-  + approveRestaurant(restaurantId): void
-  + suspendRestaurant(restaurantId, reason): void
-  + verifyDriver(driverId): void
-  + blockDriver(driverId, reason): void
-  + resolveDispute(orderId, resolution): void
-  + generateReport(type, period): Report
-  + managePromotion(promoId, action): void
-  + viewAnalytics(period): Analytics
-  + assignPermission(permission): void
-  + revokePermission(permission): void
-  + hasPermission(permission): Boolean
-  + verifyCODCollection(collectionId): void
-  + reviewCODDispute(disputeId): void
+  + -------------approveRestaurant(restaurantId): void
+  + -------------suspendRestaurant(restaurantId, reason): void
+  + -------------verifyDriver(driverId): void
+  + -------------blockDriver(driverId, reason): void
+  + -------------resolveDispute(orderId, resolution): void
+  + -------------generateReport(type, period): Report
+  + -------------managePromotion(promoId, action): void
+  + -------------viewAnalytics(period): Analytics
+  + -------------assignPermission(permission): void
+  + -------------revokePermission(permission): void
+  + -------------hasPermission(permission): Boolean
+  + -------------verifyCODCollection(collectionId): void
+  + -------------reviewCODDispute(disputeId): void
 }
 class Client {
   - clientId: String <<PK>>
@@ -836,7 +825,6 @@ User <|-- Admin
 User <|-- Client
 User <|-- RestaurantOwner
 User <|-- Driver
-User "1" -- "0..1" UserProfile : has >
 User "1" -- "0..*" Notification : receives >
 User "1" -- "0..*" SupportTicket : creates >
 Client "1" -- "0..*" Address : owns >
