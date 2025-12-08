@@ -9,7 +9,7 @@ class User {
   - phone: String <<unique>>
   - passwordHash: String
   - role: Enum{Admin, Client, RestaurantOwner, Driver}
-  - avatarUrl: String
+  - picture: String
   - verified: Boolean
   - isActive: Boolean
   - isBanned: Boolean
