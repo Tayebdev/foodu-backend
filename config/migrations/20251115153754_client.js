@@ -10,6 +10,7 @@ exports.up = function (knex) {
     table.integer("totalOrders").defaultTo(0);
     table.float("totalSpent").defaultTo(0);
     table.json("favoriteRestaurants").nullable();
+    table.enum("memberShipTier", ["Bronze", "Silver", "Gold", "Platinum"]).defaultTo("Bronze");
 
     table
       .foreign("userId")

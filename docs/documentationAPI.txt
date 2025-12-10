@@ -1,0 +1,585 @@
+================================================================================
+CLASS: User
+FILENAME: User.txt
+================================================================================
+Class Name: User
+Description: Represents the base user entity in the system, managing authentication and profile details.
+Attributes:
+  - userId: String (PK) - Unique identifier for the user.
+  - name: String - Full name of the user.
+  - email: String (Unique) - Email address for login and notifications.
+  - phone: String (Unique) - Contact phone number.
+  - passwordHash: String - Encrypted password.
+  - role: Enum{Admin, Client, RestaurantOwner, Driver} - Role determining permissions.
+  - picture: String - URL to profile picture.
+  - verified: Boolean - Information verification status.
+  - isActive: Boolean - Account active status.
+  - isBanned: Boolean - Account ban status.
+  - verifyCode: String - Code used for email/phone verification.
+  - createdAt: Date - Account creation timestamp.
+  - updatedAt: Date - Last update timestamp.
+  - lastLogin: Date - Timestamp of last login.
+
+Methods / Operations:
+  - register(email, password, role)
+    Route: POST /auth/register
+    Description: Registers a new user.
+    Parameters: email (String), password (String), role (Enum)
+    Returns: User - Created user object.
+    Request JSON: { "email": "user@example.com", "password": "securePass123", "name": "John Doe", "role": "Client" }
+    
+  - login(email, password)
+    Route: POST /auth/login
+    Description: Authenticates a user and returns a token.
+    Parameters: email (String), password (String)
+    Returns: String - JWT Token.
+    Request JSON: { "email": "user@example.com", "password": "securePass123" }
+    
+  - logout()
+    Route: POST /auth/logout
+    Description: Logs out the current user.
+    Returns: void
+
+  - updateProfile(data)
+    Route: PUT /users/profile
+    Description: Updates user profile information.
+    Parameters: data (JSON) - Fields to update.
+    Returns: User - Updated user object.
+
+  - changePassword(oldPassword, newPassword)
+    Route: PATCH /users/change-password
+    Description: Changes the user's password.
+    Parameters: oldPassword (String), newPassword (String)
+    Returns: Boolean - Success status.
+    
+  - resetPassword(token, newPassword)
+    Route: POST /auth/reset-password
+    Description: Resets password using a recovery token.
+    Parameters: token (String), newPassword (String)
+    Returns: Boolean
+
+  - verifyEmail(token)
+    Route: GET /auth/verify-email
+    Description: Verifies user email address.
+    Parameters: token (String)
+    Returns: Boolean
+
+  - deleteAccount()
+    Route: DELETE /users/me
+    Description: Deletes the current user's account.
+    Returns: void
+
+  - getById(userId)
+    Route: GET /users/{userId}
+    Description: Retrieves user details by ID.
+    Parameters: userId (String)
+    Returns: User
+
+  - ban(reason)
+    Route: POST /users/{userId}/ban
+    Description: Bans a user (Admin only).
+    Parameters: reason (String)
+    Returns: void
+
+  - unban()
+    Route: POST /users/{userId}/unban
+    Description: Unbans a user (Admin only).
+    Returns: void
+
+================================================================================
+CLASS: Admin
+FILENAME: Admin.txt
+================================================================================
+Class Name: Admin
+Description: Represents an administrative user with elevated privileges.
+Attributes:
+  - adminId: String (PK) - Unique identifier for the admin.
+  - userId: String (FK) - Reference to the base User entity.
+  - permissions: String[] - List of specific usage permissions.
+  - level: Enum{SuperAdmin, Moderator, Support} - Administration level.
+  - lastActivityAt: Date - Timestamp of last admin action.
+
+Methods / Operations:
+  - banUser(userId, reason)
+    Route: POST /admin/users/{userId}/ban
+    Description: Bans a specific user.
+    Parameters: userId (String), reason (String)
+    Returns: void
+
+  - approveRestaurant(restaurantId)
+    Route: POST /admin/restaurants/{restaurantId}/approve
+    Description: Approves a pending restaurant registration.
+    Parameters: restaurantId (String)
+    Returns: void
+
+  - suspendRestaurant(restaurantId, reason)
+    Route: POST /admin/restaurants/{restaurantId}/suspend
+    Description: Suspends a restaurant from the platform.
+    Parameters: restaurantId (String), reason (String)
+    Returns: void
+
+  - verifyDriver(driverId)
+    Route: POST /admin/drivers/{driverId}/verify
+    Description: Verifies a driver's documents and status.
+    Parameters: driverId (String)
+    Returns: void
+
+  - resolveDispute(orderId, resolution)
+    Route: POST /admin/disputes/{orderId}/resolve
+    Description: Resolves an order dispute.
+    Parameters: orderId (String), resolution (String)
+    Returns: void
+
+  - generateReport(type, period)
+    Route: POST /admin/reports/generate
+    Description: Generates a system report.
+    Parameters: type (String), period (String)
+    Returns: Report
+
+  - viewAnalytics(period)
+    Route: GET /admin/analytics
+    Description: Retrieves analytics data for a period.
+    Parameters: period (String)
+    Returns: Analytics
+
+================================================================================
+CLASS: Client
+FILENAME: Client.txt
+================================================================================
+Class Name: Client
+Description: Represents a customer who places orders.
+Attributes:
+  - clientId: String (PK) - Unique identifier.
+  - userId: String (FK) - Reference to base User.
+  - loyaltyPoints: Int - Accumulated points.
+  - totalOrders: Int - Count of completed orders.
+  - totalSpent: Float - Total money spent.
+  - favoriteRestaurants: String[] - IDs of favorite restaurants.
+  - membershipTier: Enum{Bronze, Silver, Gold, Platinum} - Loyalty tier.
+
+Methods / Operations:
+  - placeOrder(cartId, addressId, paymentMethod)
+    Route: POST /clients/orders
+    Description: Places a new order from a cart.
+    Parameters: cartId (String), addressId (String), paymentMethod (String)
+    Returns: Order
+
+  - viewOrderHistory(filters)
+    Route: GET /clients/orders
+    Description: Retrieves past orders.
+    Parameters: filters (JSON)
+    Returns: List<Order>
+
+  - trackOrder(orderId)
+    Route: GET /orders/{orderId}/track
+    Description: Gets tracking info for an active order.
+    Parameters: orderId (String)
+    Returns: TrackingInfo
+
+  - cancelOrder(orderId, reason)
+    Route: POST /orders/{orderId}/cancel
+    Description: Cancels an active order.
+    Parameters: orderId (String), reason (String)
+    Returns: Boolean
+
+  - rateOrder(orderId, restaurantScore, driverScore)
+    Route: POST /orders/{orderId}/rate
+    Description: Submits a rating for an order.
+    Parameters: orderId (String), scores (Int)
+    Returns: void
+
+  - addToCart(restaurantId, menuItemId, quantity)
+    Route: POST /cart/items
+    Description: Adds an item to the user's cart.
+    Parameters: restaurantId (String), menuItemId (String), quantity (Int)
+    Returns: CartItem
+
+  - addAddress(addressData)
+    Route: POST /clients/addresses
+    Description: Adds a new delivery address.
+    Parameters: addressData (JSON)
+    Returns: Address
+
+  - redeemPoints(points)
+    Route: POST /clients/loyalty/redeem
+    Description: Redeems loyalty points for a discount.
+    Parameters: points (Int)
+    Returns: Discount
+
+================================================================================
+CLASS: Address
+FILENAME: Address.txt
+================================================================================
+Class Name: Address
+Description: Represents a delivery or location address.
+Attributes:
+  - addressId: String (PK) - Unique ID.
+  - clientId: String (FK) - Owner of the address.
+  - label: String - e.g., "Home", "Work".
+  - street: String - Street name.
+  - latitude: Float - GPS Latitude.
+  - longitude: Float - GPS Longitude.
+  - isDefault: Boolean - Whether this is the default address.
+
+Methods / Operations:
+  - setAsDefault()
+    Route: PUT /addresses/{addressId}/default
+    Description: Sets this address as the default for the client.
+    Returns: void
+
+  - geocode()
+    Route: POST /addresses/{addressId}/geocode
+    Description: Fetches coordinates based on address text.
+    Returns: Coordinates
+
+  - getByClient(clientId)
+    Route: GET /clients/{clientId}/addresses
+    Description: Lists all addresses for a client.
+    Returns: List<Address>
+
+================================================================================
+CLASS: RestaurantOwner
+FILENAME: RestaurantOwner.txt
+================================================================================
+Class Name: RestaurantOwner
+Description: Represents a partner who owns restaurants.
+Attributes:
+  - ownerId: String (PK)
+  - userId: String (FK)
+  - verified: Boolean
+  - businessLicense: String
+
+Methods / Operations:
+  - registerRestaurant(data)
+    Route: POST /owners/restaurants
+    Description: Registers a new restaurant.
+    Parameters: data (JSON)
+    Returns: Restaurant
+
+  - manageMenu(restaurantId)
+    Route: GET /restaurants/{restaurantId}/menu/manage
+    Description: Accesses menu management.
+    Returns: Menu
+
+  - viewOrders(restaurantId, filters)
+    Route: GET /restaurants/{restaurantId}/orders
+    Description: Views incoming orders.
+    Returns: List<Order>
+
+  - viewEarnings(restaurantId, period)
+    Route: GET /restaurants/{restaurantId}/earnings
+    Description: Views financial earnings.
+    Returns: Earnings
+
+================================================================================
+CLASS: Driver
+FILENAME: Driver.txt
+================================================================================
+Class Name: Driver
+Description: Represents a delivery partner.
+Attributes:
+  - driverId: String (PK)
+  - userId: String (FK)
+  - availability: Enum{Online, Offline, Busy}
+  - currentLatitude: Float
+  - currentLongitude: Float
+  - rating: Float
+
+Methods / Operations:
+  - toggleAvailability(status)
+    Route: PATCH /drivers/availability
+    Description: Switches online/offline status.
+    Parameters: status (Enum)
+    Returns: void
+
+  - acceptDeliveryRequest(requestId)
+    Route: POST /drivers/requests/{requestId}/accept
+    Description: Accepts a delivery job.
+    Returns: void
+
+  - updateLocation(lat, lon)
+    Route: POST /drivers/location
+    Description: Pushes real-time location updates.
+    Returns: void
+
+  - markDelivered(requestId)
+    Route: POST /drivers/requests/{requestId}/delivered
+    Description: Marks a delivery as complete.
+    Returns: void
+
+================================================================================
+CLASS: Restaurant
+FILENAME: Restaurant.txt
+================================================================================
+Class Name: Restaurant
+Description: Represents a restaurant entity.
+Attributes:
+  - restaurantId: String (PK)
+  - ownerId: String (FK)
+  - name: String
+  - status: Enum{Active, Closed, Suspended, PendingApproval}
+  - deliveryRadius: Float
+
+Methods / Operations:
+  - getMenu()
+    Route: GET /restaurants/{restaurantId}/menu
+    Description: Retrieves the public menu.
+    Returns: Menu
+
+  - search(query, filters)
+    Route: GET /restaurants/search
+    Description: Searches restaurants by name/cuisine.
+    Parameters: query (String)
+    Returns: List<Restaurant>
+
+================================================================================
+CLASS: MenuCategory
+FILENAME: MenuCategory.txt
+================================================================================
+Class Name: MenuCategory
+Description: Category within a menu (e.g., Starters, Mains).
+Attributes:
+  - categoryId: String (PK)
+  - restaurantId: String (FK)
+  - name: String
+  - displayOrder: Int
+
+Methods / Operations:
+  - getItems()
+    Route: GET /categories/{categoryId}/items
+    Description: Gets all items in this category.
+    Returns: List<MenuItem>
+
+================================================================================
+CLASS: MenuItem
+FILENAME: MenuItem.txt
+================================================================================
+Class Name: MenuItem
+Description: A specific food item available for order.
+Attributes:
+  - menuItemId: String (PK)
+  - categoryId: String (FK)
+  - name: String
+  - price: Float
+  - isAvailable: Boolean
+
+Methods / Operations:
+  - toggleAvailability()
+    Route: PATCH /menu-items/{itemId}/availability
+    Description: Toggles item stock status.
+    Returns: void
+    
+  - updatePrice(newPrice)
+    Route: PATCH /menu-items/{itemId}/price
+    Description: Updates the item price.
+    Parameters: newPrice (Float)
+    Returns: void
+
+================================================================================
+CLASS: Cart
+FILENAME: Cart.txt
+================================================================================
+Class Name: Cart
+Description: Temporary storage for items before ordering.
+Attributes:
+  - cartId: String (PK)
+  - clientId: String (FK)
+  - totalAmount: Float
+  - items: List<CartItem>
+
+Methods / Operations:
+  - addItem(menuItemId, quantity)
+    Route: POST /cart/items
+    Description: Adds an item to the cart.
+    Returns: CartItem
+
+  - convertToOrder(addressId, paymentMethod)
+    Route: POST /cart/checkout
+    Description: Converts the cart into a placed order.
+    Returns: Order
+
+================================================================================
+CLASS: Order
+FILENAME: Order.txt
+================================================================================
+Class Name: Order
+Description: Represents a placed order.
+Attributes:
+  - orderId: String (PK)
+  - clientId: String (FK)
+  - restaurantId: String (FK)
+  - driverId: String (FK)
+  - status: Enum{Pending, Accepted, ...}
+  - totalAmount: Float
+
+Methods / Operations:
+  - cancel(userId, reason)
+    Route: POST /orders/{orderId}/cancel
+    Description: Cancels the order.
+    Returns: Boolean
+
+  - getTimeline()
+    Route: GET /orders/{orderId}/timeline
+    Description: Gets status history.
+    Returns: List<StatusHistory>
+
+================================================================================
+CLASS: DeliveryRequest
+FILENAME: DeliveryRequest.txt
+================================================================================
+Class Name: DeliveryRequest
+Description: A request sent to drivers to fulfill an order.
+Attributes:
+  - requestId: String (PK)
+  - orderId: String (FK)
+  - status: Enum{Pending, Accepted, Rejected...}
+
+Methods / Operations:
+  - accept(driverId)
+    Route: POST /delivery-requests/{requestId}/accept
+    Description: Driver accepts the request.
+    Returns: void
+
+  - reject(driverId, reason)
+    Route: POST /delivery-requests/{requestId}/reject
+    Description: Driver rejects the request.
+    Returns: void
+
+================================================================================
+CLASS: Payment
+FILENAME: Payment.txt
+================================================================================
+Class Name: Payment
+Description: Handles payment transactions for orders.
+Attributes:
+  - paymentId: String (PK)
+  - orderId: String (FK)
+  - method: Enum{COD, Card, BankTransfer}
+  - status: Enum{Pending, Authorized, Paid, Failed}
+  - amount: Float
+
+Methods / Operations:
+  - processCardPayment(cardDetails)
+    Route: POST /payments/{paymentId}/process
+    Description: Process a credit card payment.
+    Returns: Boolean
+
+================================================================================
+CLASS: Notification
+FILENAME: Notification.txt
+================================================================================
+Class Name: Notification
+Description: System notifications for users.
+Attributes:
+  - notificationId: String (PK)
+  - userId: String (FK)
+  - title: String
+  - body: String
+  - isRead: Boolean
+
+Methods / Operations:
+  - markAsRead()
+    Route: PATCH /notifications/{notificationId}/read
+    Description: Marks notification as read.
+    Returns: void
+
+================================================================================
+CLASS: SupportTicket
+FILENAME: SupportTicket.txt
+================================================================================
+Class Name: SupportTicket
+Description: Customer support tickets.
+Attributes:
+  - ticketId: String (PK)
+  - userId: String (FK)
+  - subject: String
+  - status: Enum{Open, Closed...}
+
+Methods / Operations:
+  - addReply(userId, message)
+    Route: POST /support/tickets/{ticketId}/reply
+    Description: Adds a message to the ticket.
+    Returns: void
+
+================================================================================
+CLASS: AnalyticsReport
+FILENAME: AnalyticsReport.txt
+================================================================================
+Class Name: AnalyticsReport
+Description: System-wide analytics reports.
+Attributes:
+  - reportId: String (PK)
+  - totalOrders: Int
+  - totalRevenue: Float
+
+Methods / Operations:
+  - generate(type, periodStart, periodEnd)
+    Route: POST /analytics/generate
+    Description: Triggers report generation.
+    Returns: AnalyticsReport
+
+================================================================================
+CLASS: Promotion
+FILENAME: Promotion.txt
+================================================================================
+Class Name: Promotion
+Description: Discount codes and promotional offers.
+Attributes:
+  - promoId: String (PK)
+  - discountType: Enum
+  - discountValue: Float
+  - validTo: Date
+
+Methods / Operations:
+  - apply(orderId)
+    Route: POST /promotions/apply
+    Description: Applies a promo code to an order.
+    Returns: Float
+
+================================================================================
+CLASS: Vehicle
+FILENAME: Vehicle.txt
+================================================================================
+Class Name: Vehicle
+Description: Driver's vehicle information.
+Attributes:
+  - vehicleId: String (PK)
+  - driverId: String (FK)
+  - plateNumber: String
+  - type: Enum
+
+Methods / Operations:
+  - activate()
+    Route: POST /vehicles/{vehicleId}/activate
+    Description: Sets vehicle as active.
+    Returns: void
+
+================================================================================
+CLASS: Other Classes (Summary)
+FILENAME: Shared_Models.txt
+================================================================================
+Classes included:
+- RestaurantSchedule
+- CartItem
+- OrderItem
+- OrderStatusHistory
+- RealTimeTracking
+- DriverEarning
+- DriverDocument
+- CashCollection
+- Refund
+- Invoice
+- Commission
+- RestaurantPayout
+- Rating
+- PromoUsage
+- SearchHistory
+- Banner
+
+These classes primarily serve as data structures or sub-resources managed via the main controllers (Order, Restaurant, Driver, etc.). Their CRUD operations are typically nested under their parent resources.
+
+Example Routes:
+- GET /orders/{orderId}/items (OrderItem)
+- GET /drivers/{driverId}/earnings (DriverEarning)
+- POST /drivers/{driverId}/documents (DriverDocument)
+- GET /restaurants/{restaurantId}/payouts (RestaurantPayout)

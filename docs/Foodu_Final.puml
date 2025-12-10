@@ -80,6 +80,28 @@ class Client {
   + confirmCashPayment(orderId): void
   + reportCODIssue(orderId, issue): void
 }
+class Address {
+  - addressId: String <<PK>>
+  - clientId: String <<FK>>
+  - label: String
+  - street: String
+  - building: String
+  - floor: String
+  - apartment: String
+  - wilaya: String
+  - commune: String
+  - postalCode: String
+  - latitude: Float
+  - longitude: Float
+  - details: String
+  - isDefault: Boolean
+  - isActive: Boolean
+  + setAsDefault(): void
+  + calculateDistance(lat, lon): Float
+  + geocode(): Coordinates
+  + getByClient(clientId): List<Address>
+  + getDefault(clientId): Address
+}
 class RestaurantOwner {
   - ownerId: String <<PK>>
   - userId: String <<FK>>
@@ -606,29 +628,6 @@ class RestaurantPayout {
   + getPayoutHistory(restaurantId): List<RestaurantPayout>
   + getByRestaurant(restaurantId): List<RestaurantPayout>
   + getPending(): List<RestaurantPayout>
-}
-class Address {
-  - addressId: String <<PK>>
-  - clientId: String <<FK>>
-  - label: String
-  - street: String
-  - building: String
-  - floor: String
-  - apartment: String
-  - wilaya: String
-  - commune: String
-  - postalCode: String
-  - latitude: Float
-  - longitude: Float
-  - details: String
-  - isDefault: Boolean
-  - isActive: Boolean
-  + setAsDefault(): void
-  + validate(): Boolean
-  + calculateDistance(lat, lon): Float
-  + geocode(): Coordinates
-  + getByClient(clientId): List<Address>
-  + getDefault(clientId): Address
 }
 class Rating {
   - ratingId: String <<PK>>
