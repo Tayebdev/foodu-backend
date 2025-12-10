@@ -97,8 +97,6 @@ class Address {
   - isDefault: Boolean
   - isActive: Boolean
   + setAsDefault(): void
-  + calculateDistance(lat, lon): Float
-  + geocode(): Coordinates
   + getByClient(clientId): List<Address>
   + getDefault(clientId): Address
 }
@@ -108,8 +106,6 @@ class RestaurantOwner {
   - verified: Boolean
   - documentsVerified: Boolean
   - isActive: Boolean
-  - totalRestaurants: Int
-  - businessLicense: String
   + registerRestaurant(data): Restaurant
   + updateRestaurant(restaurantId, data): Restaurant
   + deleteRestaurant(restaurantId): void

@@ -227,10 +227,6 @@ Methods / Operations:
     Description: Sets this address as the default for the client.
     Returns: void
 
-  - geocode()
-    Route: POST /addresses/{addressId}/geocode
-    Description: Fetches coordinates based on address text.
-    Returns: Coordinates
 
   - getByClient(clientId)
     Route: GET /clients/{clientId}/addresses
