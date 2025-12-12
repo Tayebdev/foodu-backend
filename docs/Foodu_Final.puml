@@ -135,28 +135,27 @@ class Driver {
   - currentLatitude: Float
   - currentLongitude: Float
   - isBlocked: Boolean
-  - vehicleType: String
   - activeDeliveryId: String
   - lastLocationUpdate: Date
   - cashOnHand: Float
   + toggleAvailability(status): void
-  + acceptDeliveryRequest(requestId): void
-  + rejectDeliveryRequest(requestId, reason): void
+  + ----------acceptDeliveryRequest(requestId): void
+  + ----------rejectDeliveryRequest(requestId, reason): void
   + updateLocation(lat, lon): void
-  + startDelivery(requestId): void
-  + markPickedUp(requestId): void
-  + markDelivered(requestId): void
-  + confirmCODCollection(orderId, amount): CashCollection
-  + viewEarnings(period): Earnings
-  + viewDeliveryHistory(filters): List<Delivery>
-  + uploadDocuments(documents): void
-  + updateVehicleInfo(vehicleData): Vehicle
-  + reportIssue(orderId, issue): Ticket
-  + getNearbyOrders(radius): List<Order>
-  + getActiveDelivery(): DeliveryRequest
-  + updateRating(newRating): void
-  + depositCash(amount): void
-  + getCashBalance(): Float
+  + ----------startDelivery(requestId): void
+  + ----------markPickedUp(requestId): void
+  + ----------markDelivered(requestId): void
+  + ----------confirmCODCollection(orderId, amount): CashCollection
+  + ----------viewEarnings(period): Earnings
+  + ----------viewDeliveryHistory(filters): List<Delivery>
+  + ----------uploadDocuments(documents): void
+  + ----------updateVehicleInfo(vehicleData): Vehicle
+  + ----------reportIssue(orderId, issue): Ticket
+  + ----------getNearbyOrders(radius): List<Order>
+  + ----------getActiveDelivery(): DeliveryRequest
+  + ----------updateRating(newRating): void
+  + ----------depositCash(amount): void
+  + ----------getCashBalance(): Float
 }
 class Restaurant {
   - restaurantId: String <<PK>>
