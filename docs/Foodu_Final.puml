@@ -106,22 +106,22 @@ class RestaurantOwner {
   - verified: Boolean
   - documentsVerified: Boolean
   - isActive: Boolean
-  + registerRestaurant(data): Restaurant
-  + updateRestaurant(restaurantId, data): Restaurant
-  + deleteRestaurant(restaurantId): void
-  + manageMenu(restaurantId): Menu
-  + addMenuItem(categoryId, itemData): MenuItem
-  + updateMenuItem(itemId, data): MenuItem
-  + deleteMenuItem(itemId): void
-  + toggleItemAvailability(itemId): void
-  + viewOrders(restaurantId, filters): List<Order>
-  + acceptOrder(orderId): void
-  + rejectOrder(orderId, reason): void
-  + updateOrderStatus(orderId, status): void
-  + viewEarnings(restaurantId, period): Earnings
-  + requestPayout(restaurantId): Payout
-  + uploadDocuments(documents): void
-  + verifyDocuments(): void
+  + -----------registerRestaurant(data): Restaurant
+  + -----------updateRestaurant(restaurantId, data): Restaurant
+  + -----------deleteRestaurant(restaurantId): void
+  + -----------manageMenu(restaurantId): Menu
+  + -----------addMenuItem(categoryId, itemData): MenuItem
+  + -----------updateMenuItem(itemId, data): MenuItem
+  + -----------deleteMenuItem(itemId): void
+  + -----------toggleItemAvailability(itemId): void
+  + -----------viewOrders(restaurantId, filters): List<Order>
+  + -----------acceptOrder(orderId): void
+  + -----------rejectOrder(orderId, reason): void
+  + -----------updateOrderStatus(orderId, status): void
+  + -----------viewEarnings(restaurantId, period): Earnings
+  + -----------requestPayout(restaurantId): Payout
+  + -----------uploadDocuments(documents): void
+  + -----------verifyDocuments(): void
 }
 class Driver {
   - driverId: String <<PK>>

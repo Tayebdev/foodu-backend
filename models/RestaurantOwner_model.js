@@ -1,4 +1,4 @@
-const baseModel = require('./Base_model');
+const baseModel = require('./base_model');
 class RestaurantOwnerModel extends baseModel {
     constructor() {
         super('restaurantOwner');
