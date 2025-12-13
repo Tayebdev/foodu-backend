@@ -25,7 +25,6 @@ exports.up = function (knex) {
     table.float("currentLongitude").nullable();
     table.timestamp("lastLocationUpdate").nullable();
     table.boolean("isBlocked").notNullable().defaultTo(false);
-    table.integer("activeDeliveryId").nullable();
     table.float("cashOnHand").notNullable().defaultTo(0);
     table.timestamps(true, true);
   });

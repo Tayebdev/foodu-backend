@@ -73,10 +73,6 @@ exports.createDriverValidator = [
     .isBoolean()
     .withMessage("isBlocked must be boolean"),
 
-  check("activeDeliveryId")
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage("activeDeliveryId must be a positive integer"),
 
   check("cashOnHand")
     .optional()
@@ -141,8 +137,6 @@ exports.updateDriverValidator = [
 
   check("isBlocked").optional().isBoolean(),
 
-  check("activeDeliveryId").optional().isInt({ min: 1 }),
-
   check("cashOnHand").optional().isFloat({ min: 0 }),
 
   runValidation,
@@ -181,9 +175,9 @@ exports.toggleAvailabilityValidator = [
       if (!driver) throw new ErrorAPI("Driver not found", 404);
       return true;
     }),
-  check("status")
+  check("availability")
     .notEmpty()
-    .withMessage("status is required")
+    .withMessage("availability is required")
     .isIn(["Online", "Offline", "Busy"])
     .withMessage("status must be one of: Online, Offline, Busy"),
 

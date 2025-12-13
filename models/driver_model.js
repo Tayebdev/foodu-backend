@@ -1,16 +1,17 @@
 const baseModel = require("./base_model");
+const db = require("../config/db");
 
 class driverModel extends baseModel {
   constructor() {
     super("driver");
   }
-  async availableDrivers(id, status) {
-    return this.knex(this.tableName)
+  async availableDrivers(id, availability) {
+    return db(this.tableName)
       .where({ id })
-      .update({ availability: status });
+      .update({ availability });
   }
   async updateLocation(id, latitude, longitude, timestamp) {
-    return this.knex(this.tableName)
+    return db(this.tableName)
       .where({ id })
       .update({
         currentLatitude: latitude,
