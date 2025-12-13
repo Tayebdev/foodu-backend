@@ -1,581 +1,1780 @@
-================================================================================
-CLASS: User
-FILENAME: User.txt
-================================================================================
+
 Class Name: User
-Description: Represents the base user entity in the system, managing authentication and profile details.
+Description: Represents a registered user of the system. This is the base entity for all roles (Admin, Client, RestaurantOwner, Driver).
+
 Attributes:
-  - userId: String (PK) - Unique identifier for the user.
-  - name: String - Full name of the user.
-  - email: String (Unique) - Email address for login and notifications.
-  - phone: String (Unique) - Contact phone number.
-  - passwordHash: String - Encrypted password.
-  - role: Enum{Admin, Client, RestaurantOwner, Driver} - Role determining permissions.
-  - picture: String - URL to profile picture.
-  - verified: Boolean - Information verification status.
-  - isActive: Boolean - Account active status.
-  - isBanned: Boolean - Account ban status.
-  - verifyCode: String - Code used for email/phone verification.
-  - createdAt: Date - Account creation timestamp.
-  - updatedAt: Date - Last update timestamp.
-  - lastLogin: Date - Timestamp of last login.
+  - userId: String (PK) - Unique identifier for the user
+  - name: String - Full name of the user
+  - email: String (Unique) - Email address for login and communication
+  - phone: String (Unique) - Phone number for verification and contact
+  - passwordHash: String - Hashed password for security
+  - role: Enum{Admin, Client, RestaurantOwner, Driver} - User's role in the system
+  - picture: String - URL to profile picture
+  - verified: Boolean - Account verification status
+  - isActive: Boolean - Account activation status (can be deactivated by user)
+  - isBanned: Boolean - Account ban status (set by admin)
+  - verifyCode: String - Code sent for email/phone verification
+  - createdAt: Date - Account creation timestamp
+  - updatedAt: Date - Last update timestamp
+  - lastLogin: Date - Timestamp of last successful login
 
 Methods / Operations:
   - register(email, password, role)
     Route: POST /auth/register
-    Description: Registers a new user.
-    Parameters: email (String), password (String), role (Enum)
-    Returns: User - Created user object.
-    Request JSON: { "email": "user@example.com", "password": "securePass123", "name": "John Doe", "role": "Client" }
-    
+    Authorization: Public
+    Description: Registers a new user with the specified role.
+    Parameters:
+      - email: String - User email
+      - password: String - User password
+      - role: String - Desired role (Client, RestaurantOwner, Driver)
+    Request JSON Example:
+      {
+        "email": "user@example.com",
+        "password": "securePass123",
+        "role": "Client",
+        "name": "John Doe",
+        "phone": "+1234567890"
+      }
+    Success Response Example:
+      {
+        "userId": "u123",
+        "token": "jwt_token_..."
+      }
+    Possible Errors:
+      - 409: Email or phone already exists
+      - 422: Invalid input data
+
   - login(email, password)
     Route: POST /auth/login
-    Description: Authenticates a user and returns a token.
-    Parameters: email (String), password (String)
-    Returns: String - JWT Token.
-    Request JSON: { "email": "user@example.com", "password": "securePass123" }
-    
+    Authorization: Public
+    Description: Authenticates a user and returns a session token.
+    Parameters:
+      - email: String - User email
+      - password: String - User password
+    Request JSON Example:
+      {
+        "email": "user@example.com",
+        "password": "securePass123"
+      }
+    Success Response Example:
+      {
+        "token": "jwt_token_...",
+        "user": { "id": "u123", "role": "Client" }
+      }
+    Possible Errors:
+      - 401: Invalid credentials
+      - 403: Account banned or not verified
+
   - logout()
     Route: POST /auth/logout
-    Description: Logs out the current user.
-    Returns: void
+    Authorization: Authenticated
+    Description: Logs out the current user (invalidates token).
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "message": "Logged out successfully" }
+    Possible Errors:
+      - 401: Unauthorized
 
   - updateProfile(data)
     Route: PUT /users/profile
-    Description: Updates user profile information.
-    Parameters: data (JSON) - Fields to update.
-    Returns: User - Updated user object.
+    Authorization: Authenticated
+    Description: Updates the user's profile information.
+    Parameters:
+      - data: Object - Fields to update (name, picture, phone)
+    Request JSON Example:
+      {
+        "name": "John Updated",
+        "picture": "https://..."
+      }
+    Success Response Example:
+      { "userId": "u123", "name": "John Updated", ... }
+    Possible Errors:
+      - 422: Invalid data
 
   - changePassword(oldPassword, newPassword)
-    Route: PATCH /users/change-password
+    Route: PATCH /users/password
+    Authorization: Authenticated
     Description: Changes the user's password.
-    Parameters: oldPassword (String), newPassword (String)
-    Returns: Boolean - Success status.
-    
+    Parameters:
+      - oldPassword: String - Current password
+      - newPassword: String - New password
+    Request JSON Example:
+      {
+        "oldPassword": "oldPass",
+        "newPassword": "newPass"
+      }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 401: Incorrect old password
+
   - resetPassword(token, newPassword)
     Route: POST /auth/reset-password
-    Description: Resets password using a recovery token.
-    Parameters: token (String), newPassword (String)
-    Returns: Boolean
+    Authorization: Public
+    Description: Resets password using a verification token/code.
+    Parameters:
+      - token: String - Reset token
+      - newPassword: String - New password
+    Request JSON Example:
+      { "token": "abc-123", "newPassword": "newPass" }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 400: Invalid or expired token
 
   - verifyEmail(token)
-    Route: GET /auth/verify-email
-    Description: Verifies user email address.
-    Parameters: token (String)
-    Returns: Boolean
+    Route: POST /auth/verify-email
+    Authorization: Public
+    Description: Verifies user's email address.
+    Parameters:
+      - token: String - Verification token
+    Request JSON Example: { "token": "xyz-789" }
+    Success Response Example: { "verified": true }
+    Possible Errors:
+      - 400: Invalid token
 
   - deleteAccount()
-    Route: DELETE /users/me
-    Description: Deletes the current user's account.
-    Returns: void
+    Route: DELETE /users/account
+    Authorization: Authenticated
+    Description: Permanently deletes the user's account.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "message": "Account deleted" }
+    Possible Errors:
+      - 400: Cannot delete account with active orders
 
   - getById(userId)
-    Route: GET /users/{userId}
-    Description: Retrieves user details by ID.
-    Parameters: userId (String)
-    Returns: User
+    Route: GET /users/:id
+    Authorization: Admin
+    Description: Retrieves a user by their ID.
+    Parameters:
+      - userId: String - The ID of the user
+    Request JSON Example: N/A
+    Success Response Example: { "userId": "u123", ... }
+    Possible Errors:
+      - 404: User not found
 
   - ban(reason)
-    Route: POST /users/{userId}/ban
-    Description: Bans a user (Admin only).
-    Parameters: reason (String)
-    Returns: void
+    Route: PATCH /admin/users/:id/ban
+    Authorization: Admin
+    Description: Bans a user from the system.
+    Parameters:
+      - reason: String - Reason for the ban
+    Request JSON Example: { "reason": "Violated terms" }
+    Success Response Example: { "success": true, "isBanned": true }
+    Possible Errors:
+      - 404: User not found
 
-  - unban()
-    Route: POST /users/{userId}/unban
-    Description: Unbans a user (Admin only).
-    Returns: void
-
-================================================================================
-CLASS: Admin
-FILENAME: Admin.txt
 ================================================================================
 Class Name: Admin
-Description: Represents an administrative user with elevated privileges.
+Description: Represents a system administrator with management privileges.
+
 Attributes:
-  - adminId: String (PK) - Unique identifier for the admin.
-  - userId: String (FK) - Reference to the base User entity.
-  - permissions: String[] - List of specific usage permissions.
-  - level: Enum{SuperAdmin, Moderator, Support} - Administration level.
-  - lastActivityAt: Date - Timestamp of last admin action.
+  - adminId: String (PK) - Unique identifier
+  - userId: String (FK) - Link to User entity
+  - permissions: String[] - List of granted permissions
+  - level: Enum{SuperAdmin, Moderator, Support} - Admin level
+  - lastActivityAt: Date - Timestamp of last action
 
 Methods / Operations:
   - banUser(userId, reason)
-    Route: POST /admin/users/{userId}/ban
+    Route: PATCH /admin/users/:userId/ban
+    Authorization: Admin
     Description: Bans a specific user.
-    Parameters: userId (String), reason (String)
-    Returns: void
+    Parameters:
+      - userId: String - User ID to ban
+      - reason: String - Reason for ban
+    Request JSON Example: { "reason": "Spamming" }
+    Success Response Example: { "message": "User banned" }
+    Possible Errors:
+      - 404: User not found
+
+  - unbanUser(userId)
+    Route: PATCH /admin/users/:userId/unban
+    Authorization: Admin
+    Description: Unbans a user.
+    Parameters:
+      - userId: String - User ID
+    Request JSON Example: {}
+    Success Response Example: { "message": "User unbanned" }
+    Possible Errors:
+      - 404: User not found
 
   - approveRestaurant(restaurantId)
-    Route: POST /admin/restaurants/{restaurantId}/approve
-    Description: Approves a pending restaurant registration.
-    Parameters: restaurantId (String)
-    Returns: void
+    Route: POST /admin/restaurants/:restaurantId/approve
+    Authorization: Admin
+    Description: Approves a newly registered restaurant.
+    Parameters:
+      - restaurantId: String - Restaurant ID
+    Request JSON Example: {}
+    Success Response Example: { "status": "Active" }
+    Possible Errors:
+      - 404: Restaurant not found
 
   - suspendRestaurant(restaurantId, reason)
-    Route: POST /admin/restaurants/{restaurantId}/suspend
-    Description: Suspends a restaurant from the platform.
-    Parameters: restaurantId (String), reason (String)
-    Returns: void
+    Route: POST /admin/restaurants/:restaurantId/suspend
+    Authorization: Admin
+    Description: Suspends a restaurant from operating.
+    Parameters:
+      - restaurantId: String - Restaurant ID
+      - reason: String - Reason
+    Request JSON Example: { "reason": "Health violation" }
+    Success Response Example: { "status": "Suspended" }
+    Possible Errors:
+      - 404: Restaurant not found
 
   - verifyDriver(driverId)
-    Route: POST /admin/drivers/{driverId}/verify
+    Route: POST /admin/drivers/:driverId/verify
+    Authorization: Admin
     Description: Verifies a driver's documents and status.
-    Parameters: driverId (String)
-    Returns: void
+    Parameters:
+      - driverId: String - Driver ID
+    Request JSON Example: {}
+    Success Response Example: { "verified": true }
+    Possible Errors:
+      - 404: Driver not found
 
-  - resolveDispute(orderId, resolution)
-    Route: POST /admin/disputes/{orderId}/resolve
-    Description: Resolves an order dispute.
-    Parameters: orderId (String), resolution (String)
-    Returns: void
+  - managePromotion(promoId, action)
+    Route: PATCH /admin/promotions/:promoId
+    Authorization: Admin
+    Description: Activates or deactivates a promotion.
+    Parameters:
+      - promoId: String - Promotion ID
+      - action: String - 'activate' or 'deactivate'
+    Request JSON Example: { "action": "activate" }
+    Success Response Example: { "isActive": true }
+    Possible Errors:
+      - 404: Promotion not found
 
-  - generateReport(type, period)
-    Route: POST /admin/reports/generate
-    Description: Generates a system report.
-    Parameters: type (String), period (String)
-    Returns: Report
+  - verifyCODCollection(collectionId)
+    Route: POST /admin/cod/collections/:collectionId/verify
+    Authorization: Admin
+    Description: Verifies that cash collected by driver has been deposited.
+    Parameters:
+      - collectionId: String - Collection ID
+    Request JSON Example: {}
+    Success Response Example: { "status": "Verified" }
+    Possible Errors:
+      - 404: Collection not found
 
-  - viewAnalytics(period)
-    Route: GET /admin/analytics
-    Description: Retrieves analytics data for a period.
-    Parameters: period (String)
-    Returns: Analytics
+  - reviewCODDispute(disputeId)
+    Route: POST /admin/cod/disputes/:disputeId/resolve
+    Authorization: Admin
+    Description: Resolves a dispute regarding Cash On Delivery.
+    Parameters:
+      - disputeId: String - Dispute ID
+      - resolution: String - Decision details
+    Request JSON Example: { "resolution": "Driver refunded" }
+    Success Response Example: { "status": "Resolved" }
+    Possible Errors:
+      - 404: Dispute not found
 
-================================================================================
-CLASS: Client
-FILENAME: Client.txt
 ================================================================================
 Class Name: Client
-Description: Represents a customer who places orders.
+Description: Represents a customer who uses the platform to order food.
+
 Attributes:
-  - clientId: String (PK) - Unique identifier.
-  - userId: String (FK) - Reference to base User.
-  - loyaltyPoints: Int - Accumulated points.
-  - totalOrders: Int - Count of completed orders.
-  - totalSpent: Float - Total money spent.
-  - favoriteRestaurants: String[] - IDs of favorite restaurants.
-  - membershipTier: Enum{Bronze, Silver, Gold, Platinum} - Loyalty tier.
+  - clientId: String (PK) - Unique client identifier
+  - userId: String (FK) - Link to User entity
+  - loyaltyPoints: Int - Accumulated loyalty points
+  - totalOrders: Int - Total number of orders placed
+  - totalSpent: Float - Total money spent
+  - favoriteRestaurants: String[] - List of favorite restaurant IDs
+  - membershipTier: Enum{Bronze, Silver, Gold, Platinum} - Loyalty tier
 
 Methods / Operations:
   - placeOrder(cartId, addressId, paymentMethod)
-    Route: POST /clients/orders
+    Route: POST /orders
+    Authorization: Client
     Description: Places a new order from a cart.
-    Parameters: cartId (String), addressId (String), paymentMethod (String)
-    Returns: Order
+    Parameters:
+      - cartId: String - ID of the cart
+      - addressId: String - Delivery address ID
+      - paymentMethod: String - 'Card', 'COD', etc.
+    Request JSON Example:
+      {
+        "cartId": "c123",
+        "addressId": "addr456",
+        "paymentMethod": "COD",
+        "promoCode": "WELCOME50"
+      }
+    Success Response Example:
+      { "orderId": "o789", "status": "Pending", "totalAmount": 1500 }
+    Possible Errors:
+      - 400: Cart empty or invalid address
+      - 402: Payment failed
 
   - viewOrderHistory(filters)
     Route: GET /clients/orders
-    Description: Retrieves past orders.
-    Parameters: filters (JSON)
-    Returns: List<Order>
+    Authorization: Client
+    Description: Retrieves the client's past orders.
+    Parameters:
+      - page: Int - Page number
+      - status: String - Filter by status
+    Request JSON Example: N/A
+    Success Response Example:
+      [ { "orderId": "o1", "total": 1200 }, ... ]
+    Possible Errors:
+      - 401: Unauthorized
 
   - trackOrder(orderId)
-    Route: GET /orders/{orderId}/track
-    Description: Gets tracking info for an active order.
-    Parameters: orderId (String)
-    Returns: TrackingInfo
+    Route: GET /orders/:orderId/track
+    Authorization: Client
+    Description: Gets real-time tracking info for an active order.
+    Parameters:
+      - orderId: String - Order ID
+    Request JSON Example: N/A
+    Success Response Example:
+      { "status": "OutForDelivery", "driverLocation": { "lat": 12.34, "lon": 56.78 } }
+    Possible Errors:
+      - 404: Order not found
 
   - cancelOrder(orderId, reason)
-    Route: POST /orders/{orderId}/cancel
-    Description: Cancels an active order.
-    Parameters: orderId (String), reason (String)
-    Returns: Boolean
+    Route: POST /orders/:orderId/cancel
+    Authorization: Client
+    Description: Cancels an order if it's not yet prepared.
+    Parameters:
+      - orderId: String - Order ID
+      - reason: String - Reason for cancellation
+    Request JSON Example: { "reason": "Changed mind" }
+    Success Response Example: { "status": "Cancelled" }
+    Possible Errors:
+      - 400: Cannot cancel at this stage
 
   - rateOrder(orderId, restaurantScore, driverScore)
-    Route: POST /orders/{orderId}/rate
-    Description: Submits a rating for an order.
-    Parameters: orderId (String), scores (Int)
-    Returns: void
+    Route: POST /orders/:orderId/rate
+    Authorization: Client
+    Description: Submits a rating for a completed order.
+    Parameters:
+      - orderId: String - Order ID
+      - restaurantScore: Int - 1-5 stars
+      - driverScore: Int - 1-5 stars
+      - comment: String - Optional review
+    Request JSON Example:
+      { "restaurantScore": 5, "driverScore": 4, "comment": "Great food!" }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 400: Order not delivered yet
 
   - addToCart(restaurantId, menuItemId, quantity)
     Route: POST /cart/items
-    Description: Adds an item to the user's cart.
-    Parameters: restaurantId (String), menuItemId (String), quantity (Int)
-    Returns: CartItem
+    Authorization: Client
+    Description: Adds an item to the client's current cart.
+    Parameters:
+      - restaurantId: String - Restaurant ID
+      - menuItemId: String - Item ID
+      - quantity: Int - Quantity
+    Request JSON Example:
+      { "restaurantId": "r1", "menuItemId": "m1", "quantity": 1 }
+    Success Response Example: { "cartId": "c1", "items": [...] }
+    Possible Errors:
+      - 409: Cannot mix items from different restaurants
 
   - addAddress(addressData)
     Route: POST /clients/addresses
+    Authorization: Client
     Description: Adds a new delivery address.
-    Parameters: addressData (JSON)
-    Returns: Address
+    Parameters:
+      - street: String
+      - city: String
+      - lat: Float
+      - lon: Float
+    Request JSON Example:
+      { "label": "Home", "street": "Main St", "lat": 36.7, "lon": 3.2 }
+    Success Response Example: { "addressId": "addr1", ... }
+    Possible Errors:
+      - 422: Invalid location
 
   - redeemPoints(points)
     Route: POST /clients/loyalty/redeem
-    Description: Redeems loyalty points for a discount.
-    Parameters: points (Int)
-    Returns: Discount
+    Authorization: Client
+    Description: Converts loyalty points into a discount voucher.
+    Parameters:
+      - points: Int - Points to redeem
+    Request JSON Example: { "points": 500 }
+    Success Response Example: { "discountCode": "PTS-500", "value": 500 }
+    Possible Errors:
+      - 400: Insufficient points
+
+  - confirmCashPayment(orderId)
+    Route: POST /orders/:orderId/cod/confirm
+    Authorization: Client
+    Description: Confirms that cash was handed to the driver.
+    Parameters:
+      - orderId: String - Order ID
+    Request JSON Example: {}
+    Success Response Example: { "received": true }
+    Possible Errors:
+      - 404: Order not found
 
 ================================================================================
-CLASS: Address
-FILENAME: Address.txt
-================================================================================
 Class Name: Address
-Description: Represents a delivery or location address.
+Description: Represents a saved delivery address for a client.
+
 Attributes:
-  - addressId: String (PK) - Unique ID.
-  - clientId: String (FK) - Owner of the address.
-  - label: String - e.g., "Home", "Work".
-  - street: String - Street name.
-  - latitude: Float - GPS Latitude.
-  - longitude: Float - GPS Longitude.
-  - isDefault: Boolean - Whether this is the default address.
+  - addressId: String (PK) - Unique ID
+  - clientId: String (FK) - Owner of address
+  - label: String - e.g., "Home", "Work"
+  - street: String - Street name
+  - building: String - Building number/name
+  - floor: String - Floor number
+  - wilaya: String - Region/Wilaya
+  - commune: String - City/Commune
+  - latitude: Float - GPS Latitude
+  - longitude: Float - GPS Longitude
+  - isDefault: Boolean - If this is the default address
+  - isActive: Boolean - If address is valid
 
 Methods / Operations:
   - setAsDefault()
-    Route: PUT /addresses/{addressId}/default
+    Route: PATCH /clients/addresses/:addressId/default
+    Authorization: Client
     Description: Sets this address as the default for the client.
-    Returns: void
-
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "isDefault": true }
+    Possible Errors:
+      - 404: Address not found
 
   - getByClient(clientId)
-    Route: GET /clients/{clientId}/addresses
-    Description: Lists all addresses for a client.
-    Returns: List<Address>
+    Route: GET /clients/addresses
+    Authorization: Client
+    Description: Retrieves all addresses for the logged-in client.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ { "addressId": "a1", "label": "Home" }, ... ]
+    Possible Errors:
+      - 401: Unauthorized
+
 
 ================================================================================
-CLASS: RestaurantOwner
-FILENAME: RestaurantOwner.txt
-================================================================================
 Class Name: RestaurantOwner
-Description: Represents a partner who owns restaurants.
+Description: Represents a partner who owns and manages restaurants on the platform.
+
 Attributes:
-  - ownerId: String (PK)
-  - userId: String (FK)
-  - verified: Boolean
-  - businessLicense: String
+  - ownerId: String (PK) - Unique Owner ID
+  - userId: String (FK) - Link to User
+  - verified: Boolean - If business is verified
+  - documentsVerified: Boolean - Legal docs status
+  - isActive: Boolean - Active status
 
 Methods / Operations:
   - registerRestaurant(data)
     Route: POST /owners/restaurants
-    Description: Registers a new restaurant.
-    Parameters: data (JSON)
-    Returns: Restaurant
+    Authorization: RestaurantOwner
+    Description: Registers a new restaurant under this owner.
+    Parameters:
+      - name: String - Restaurant name
+      - address: String - Address
+      - phone: String - Contact
+    Request JSON Example:
+      {
+        "name": "Burger King",
+        "address": "123 Main St",
+        "cuisine": "Fast Food",
+        "wilaya": "Algiers",
+        "commune": "Hydra"
+      }
+    Success Response Example: { "restaurantId": "r1", "status": "PendingApproval" }
+    Possible Errors:
+      - 422: Missing fields
 
-  - manageMenu(restaurantId)
-    Route: GET /restaurants/{restaurantId}/menu/manage
-    Description: Accesses menu management.
-    Returns: Menu
+  - updateRestaurant(restaurantId, data)
+    Route: PUT /owners/restaurants/:restaurantId
+    Authorization: RestaurantOwner
+    Description: Updates restaurant details.
+    Parameters:
+      - restaurantId: String - Restaurant ID
+      - data: Object - Fields to update
+    Request JSON Example: { "phone": "0555555555" }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 403: Not owner of this restaurant
+
+  - deleteRestaurant(restaurantId)
+    Route: DELETE /owners/restaurants/:restaurantId
+    Authorization: RestaurantOwner
+    Description: Soft deletes a restaurant.
+    Parameters:
+      - restaurantId: String - Restaurant ID
+    Request JSON Example: {}
+    Success Response Example: { "message": "Restaurant deleted" }
+    Possible Errors:
+      - 400: Active orders exist
+
+  - addMenuItem(categoryId, itemData)
+    Route: POST /restaurants/menus/items
+    Authorization: RestaurantOwner
+    Description: Adds a new item to a specific category.
+    Parameters:
+      - categoryId: String - Category ID
+      - name: String - Item name
+      - price: Float - Price
+    Request JSON Example:
+      {
+        "categoryId": "cat1",
+        "name": "Cheeseburger",
+        "price": 500,
+        "description": "Tasty burger"
+      }
+    Success Response Example: { "menuItemId": "m1" }
+    Possible Errors:
+      - 404: Category not found
+
+  - updateMenuItem(itemId, data)
+    Route: PUT /restaurants/menus/items/:itemId
+    Authorization: RestaurantOwner
+    Description: Updates an existing menu item.
+    Parameters:
+      - itemId: String - Item ID
+      - data: Object - Changes
+    Request JSON Example: { "price": 600 }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 404: Item not found
+
+  - toggleItemAvailability(itemId)
+    Route: PATCH /restaurants/menus/items/:itemId/availability
+    Authorization: RestaurantOwner
+    Description: Toggles item out of stock / in stock.
+    Parameters:
+      - itemId: String - Item ID
+    Request JSON Example: {}
+    Success Response Example: { "isAvailable": false }
+    Possible Errors:
+      - 404: Item not found
 
   - viewOrders(restaurantId, filters)
-    Route: GET /restaurants/{restaurantId}/orders
-    Description: Views incoming orders.
-    Returns: List<Order>
+    Route: GET /owners/restaurants/:restaurantId/orders
+    Authorization: RestaurantOwner
+    Description: Lists orders for a restaurant.
+    Parameters:
+      - restaurantId: String - Restaurant ID
+      - status: String - Filter (Pending, Preparing...)
+    Request JSON Example: N/A
+    Success Response Example: [ { "orderId": "o1", "items": [...] } ]
+    Possible Errors:
+      - 403: Forbidden
+
+  - acceptOrder(orderId)
+    Route: POST /orders/:orderId/accept
+    Authorization: RestaurantOwner
+    Description: Accepts a pending order.
+    Parameters:
+      - orderId: String - Order ID
+    Request JSON Example: {}
+    Success Response Example: { "status": "Accepted" }
+    Possible Errors:
+      - 400: Order already cancelled
+
+  - rejectOrder(orderId, reason)
+    Route: POST /orders/:orderId/reject
+    Authorization: RestaurantOwner
+    Description: Rejects an order (e.g., out of stock).
+    Parameters:
+      - orderId: String - Order ID
+      - reason: String - Reason
+    Request JSON Example: { "reason": "Kitchen busy" }
+    Success Response Example: { "status": "Cancelled" }
+    Possible Errors:
+      - 400: Order cannot be rejected
 
   - viewEarnings(restaurantId, period)
-    Route: GET /restaurants/{restaurantId}/earnings
-    Description: Views financial earnings.
-    Returns: Earnings
+    Route: GET /owners/restaurants/:restaurantId/earnings
+    Authorization: RestaurantOwner
+    Description: View financial earnings report.
+    Parameters:
+      - restaurantId: String
+      - startDate: Date
+      - endDate: Date
+    Request JSON Example: N/A
+    Success Response Example: { "totalSales": 50000, "net": 45000 }
+    Possible Errors:
+      - 403: Forbidden
+
+  - requestPayout(restaurantId)
+    Route: POST /owners/payouts/request
+    Authorization: RestaurantOwner
+    Description: Requests withdrawal of earnings.
+    Parameters:
+      - restaurantId: String
+    Request JSON Example: { "amount": 10000 }
+    Success Response Example: { "payoutId": "p1", "status": "Pending" }
+    Possible Errors:
+      - 400: Insufficient funds
 
 ================================================================================
-CLASS: Driver
-FILENAME: Driver.txt
-================================================================================
 Class Name: Driver
-Description: Represents a delivery partner.
+Description: Represents a delivery driver/courier.
+
 Attributes:
-  - driverId: String (PK)
-  - userId: String (FK)
-  - availability: Enum{Online, Offline, Busy}
-  - currentLatitude: Float
-  - currentLongitude: Float
-  - rating: Float
+  - driverId: String (PK) - Driver ID
+  - userId: String (FK) - User ID
+  - verified: Boolean - Verified status
+  - availability: Enum{Online, Offline, Busy} - Current status
+  - totalTrips: Int - Career trips
+  - rating: Float - Average rating
+  - cashOnHand: Float - COD money held
+  - currentLatitude: Float - Live GPS Lat
+  - currentLongitude: Float - Live GPS Lon
 
 Methods / Operations:
   - toggleAvailability(status)
     Route: PATCH /drivers/availability
-    Description: Switches online/offline status.
-    Parameters: status (Enum)
-    Returns: void
+    Authorization: Driver
+    Description: Switches driver online/offline.
+    Parameters:
+      - status: String - 'Online' or 'Offline'
+    Request JSON Example: { "status": "Online" }
+    Success Response Example: { "availability": "Online" }
+    Possible Errors:
+      - 400: Invalid status
 
   - acceptDeliveryRequest(requestId)
-    Route: POST /drivers/requests/{requestId}/accept
+    Route: POST /deliveries/:requestId/accept
+    Authorization: Driver
     Description: Accepts a delivery job.
-    Returns: void
+    Parameters:
+      - requestId: String - Delivery Request ID
+    Request JSON Example: {}
+    Success Response Example: { "status": "Accepted", "orderId": "o1" }
+    Possible Errors:
+      - 410: Request expired or taken
+
+  - rejectDeliveryRequest(requestId, reason)
+    Route: POST /deliveries/:requestId/reject
+    Authorization: Driver
+    Description: Declines a delivery job.
+    Parameters:
+      - requestId: String - Request ID
+      - reason: String - Reason
+    Request JSON Example: { "reason": "Too far" }
+    Success Response Example: { "status": "Rejected" }
+    Possible Errors:
+      - 404: Request not found
 
   - updateLocation(lat, lon)
     Route: POST /drivers/location
-    Description: Pushes real-time location updates.
-    Returns: void
+    Authorization: Driver
+    Description: Updates driver's realtime coordinates.
+    Parameters:
+      - lat: Float - Latitude
+      - lon: Float - Longitude
+    Request JSON Example: { "lat": 36.75, "lon": 3.05 }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 401: Unauthorized
+
+  - startDelivery(requestId)
+    Route: POST /deliveries/:requestId/start
+    Authorization: Driver
+    Description: Marks that driver is heading to pickup.
+    Parameters:
+      - requestId: String - Request ID
+    Request JSON Example: {}
+    Success Response Example: { "status": "HeadingToRestaurant" }
+    Possible Errors:
+      - 400: Invalid state
+
+  - markPickedUp(requestId)
+    Route: POST /deliveries/:requestId/picked-up
+    Authorization: Driver
+    Description: Confirms order pickup from restaurant.
+    Parameters:
+      - requestId: String - Request ID
+    Request JSON Example: {}
+    Success Response Example: { "status": "PickedUp" }
+    Possible Errors:
+      - 400: Order not ready
 
   - markDelivered(requestId)
-    Route: POST /drivers/requests/{requestId}/delivered
-    Description: Marks a delivery as complete.
-    Returns: void
+    Route: POST /deliveries/:requestId/delivered
+    Authorization: Driver
+    Description: Confirms successful delivery to client.
+    Parameters:
+      - requestId: String - Request ID
+    Request JSON Example: {}
+    Success Response Example: { "status": "Delivered" }
+    Possible Errors:
+      - 400: Not picked up yet
+
+  - confirmCODCollection(orderId, amount)
+    Route: POST /orders/:orderId/cod/collect
+    Authorization: Driver
+    Description: Records cash collected from client.
+    Parameters:
+      - orderId: String - Order ID
+      - amount: Float - Amount collected
+    Request JSON Example: { "amount": 1500 }
+    Success Response Example: { "collectionId": "col1", "verified": false }
+    Possible Errors:
+      - 400: Amount mismatch
+
+  - uploadDocuments(documents)
+    Route: POST /drivers/documents
+    Authorization: Driver
+    Description: Uploads license/ID images for verification.
+    Parameters:
+      - documents: Multipart/Form-Data
+    Request JSON Example: N/A (Form Data)
+    Success Response Example: { "uploaded": true, "status": "PendingVerification" }
+    Possible Errors:
+      - 422: Invalid file type
+
+  - updateVehicleInfo(vehicleData)
+    Route: PUT /drivers/vehicle
+    Authorization: Driver
+    Description: Updates vehicle details.
+    Parameters:
+      - model: String
+      - plate: String
+    Request JSON Example: { "model": "Sym Symphony", "plate": "12345-116-16" }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 422: Invalid data
+
+  - reportIssue(orderId, issue)
+    Route: POST /support/tickets
+    Authorization: Driver
+    Description: Reports a problem with an order or client.
+    Parameters:
+      - orderId: String
+      - issue: String
+    Request JSON Example: { "subject": "Client not answering", "category": "Delivery" }
+    Success Response Example: { "ticketId": "t1" }
+    Possible Errors:
+      - 400: Bad request
 
 ================================================================================
-CLASS: Restaurant
-FILENAME: Restaurant.txt
-================================================================================
 Class Name: Restaurant
-Description: Represents a restaurant entity.
+Description: Represents the physical restaurant entity.
+
 Attributes:
   - restaurantId: String (PK)
   - ownerId: String (FK)
-  - name: String
-  - status: Enum{Active, Closed, Suspended, PendingApproval}
-  - deliveryRadius: Float
+  - name: String - Restaurant Name
+  - logoUrl: String
+  - wilaya: String
+  - commune: String
+  - latitude: Float
+  - longitude: Float
+  - rating: Float
+  - status: Enum{Active, Closed, Suspended}
+  - acceptsCOD: Boolean - If checks on delivery are supported
 
 Methods / Operations:
+  - updateStatus(status)
+    Route: PATCH /restaurants/:restaurantId/status
+    Authorization: RestaurantOwner
+    Description: Opens or closes the restaurant.
+    Parameters:
+      - status: String - 'Active' (Open) or 'Closed'
+    Request JSON Example: { "status": "Closed" }
+    Success Response Example: { "status": "Closed" }
+    Possible Errors:
+      - 403: Forbidden
+
   - getMenu()
-    Route: GET /restaurants/{restaurantId}/menu
-    Description: Retrieves the public menu.
-    Returns: Menu
+    Route: GET /restaurants/:restaurantId/menu
+    Authorization: Public
+    Description: Retrieves the full menu for the restaurant.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example:
+      {
+        "categories": [
+          { "name": "Burgers", "items": [...] }
+        ]
+      }
+    Possible Errors:
+      - 404: Restaurant not found
 
   - search(query, filters)
     Route: GET /restaurants/search
-    Description: Searches restaurants by name/cuisine.
-    Parameters: query (String)
-    Returns: List<Restaurant>
+    Authorization: Public
+    Description: Searches for restaurants by name or cuisine.
+    Parameters:
+      - q: String - Search term
+      - wilaya: String - Filter
+    Request JSON Example: N/A
+    Success Response Example: [ { "name": "Pizza Hot", ... } ]
+    Possible Errors:
+      - 400: Invalid query
+
+  - getNearby(lat, lon, radius)
+    Route: GET /restaurants/nearby
+    Authorization: Public
+    Description: Finds restaurants near a location.
+    Parameters:
+      - lat: Float
+      - lon: Float
+      - radius: Float (km)
+    Request JSON Example: N/A
+    Success Response Example: [ ... ]
+    Possible Errors:
+      - 400: Invalid coordinates
+
+  - toggleCODAcceptance()
+    Route: PATCH /restaurants/:restaurantId/cod
+    Authorization: RestaurantOwner
+    Description: Enables or disables Cash On Delivery for this restaurant.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "acceptsCOD": true }
+    Possible Errors:
+      - 403: Forbidden
 
 ================================================================================
-CLASS: MenuCategory
-FILENAME: MenuCategory.txt
+Class Name: RestaurantSchedule
+Description: Defines operating hours for a restaurant.
+
+Attributes:
+  - scheduleId: String (PK)
+  - restaurantId: String (FK)
+  - dayOfWeek: Enum - Mon, Tue...
+  - openTime: Time
+  - closeTime: Time
+
+Methods / Operations:
+  - getByRestaurant(restaurantId)
+    Route: GET /restaurants/:restaurantId/schedule
+    Authorization: Public
+    Description: Gets opening hours.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example:
+      [ { "day": "Mon", "open": "09:00", "close": "22:00" }, ... ]
+    Possible Errors:
+      - 404: Not found
+
+
 ================================================================================
 Class Name: MenuCategory
-Description: Category within a menu (e.g., Starters, Mains).
+Description: Represents a section of a menu (e.g., "Starters", "Drinks").
+
 Attributes:
   - categoryId: String (PK)
   - restaurantId: String (FK)
   - name: String
-  - displayOrder: Int
+  - displayOrder: Int - Sorting order
+  - isActive: Boolean
 
 Methods / Operations:
+  - reorder(newOrder)
+    Route: PATCH /menus/categories/reorder
+    Authorization: RestaurantOwner
+    Description: Updates the display order of categories.
+    Parameters:
+      - newOrder: Array<{id, order}>
+    Request JSON Example: [ { "id": "cat1", "order": 1 }, { "id": "cat2", "order": 2 } ]
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 400: Invalid data
+
   - getItems()
-    Route: GET /categories/{categoryId}/items
+    Route: GET /menus/categories/:categoryId/items
+    Authorization: Public
     Description: Gets all items in this category.
-    Returns: List<MenuItem>
+    Parameters:
+      - categoryId: String
+    Request JSON Example: N/A
+    Success Response Example: [ { "itemId": "m1", "name": "Coke" } ]
+    Possible Errors:
+      - 404: Category not found
+
+  - getByRestaurant(restaurantId)
+    Route: GET /restaurants/:restaurantId/categories
+    Authorization: Public
+    Description: Lists all active categories for a restaurant.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ { "categoryId": "c1", "name": "Pizza" } ]
+    Possible Errors:
+      - 404: Restaurant not found
 
 ================================================================================
-CLASS: MenuItem
-FILENAME: MenuItem.txt
-================================================================================
 Class Name: MenuItem
-Description: A specific food item available for order.
+Description: Represents a specific food or drink item on the menu.
+
 Attributes:
   - menuItemId: String (PK)
   - categoryId: String (FK)
   - name: String
+  - description: String
   - price: Float
+  - discountPrice: Float
+  - imageUrl: String
   - isAvailable: Boolean
+  - allergens: String[]
 
 Methods / Operations:
-  - toggleAvailability()
-    Route: PATCH /menu-items/{itemId}/availability
-    Description: Toggles item stock status.
-    Returns: void
-    
   - updatePrice(newPrice)
-    Route: PATCH /menu-items/{itemId}/price
-    Description: Updates the item price.
-    Parameters: newPrice (Float)
-    Returns: void
+    Route: PATCH /menus/items/:itemId/price
+    Authorization: RestaurantOwner
+    Description: Updates the item's base price.
+    Parameters:
+      - newPrice: Float
+    Request JSON Example: { "price": 1200 }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 404: Item not found
+
+  - setDiscount(discountPrice)
+    Route: PATCH /menus/items/:itemId/discount
+    Authorization: RestaurantOwner
+    Description: Sets a promotional price.
+    Parameters:
+      - discountPrice: Float
+    Request JSON Example: { "discountPrice": 1000 }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 400: Discount > Price
+
+  - uploadImage(file)
+    Route: POST /menus/items/:itemId/image
+    Authorization: RestaurantOwner
+    Description: Uploads a photo for the item.
+    Parameters:
+      - file: File
+    Request JSON Example: N/A
+    Success Response Example: { "imageUrl": "https://..." }
+    Possible Errors:
+      - 422: Invalid file
 
 ================================================================================
-CLASS: Cart
-FILENAME: Cart.txt
-================================================================================
 Class Name: Cart
-Description: Temporary storage for items before ordering.
+Description: Represents a user's temporary shopping cart.
+
 Attributes:
   - cartId: String (PK)
   - clientId: String (FK)
+  - restaurantId: String (FK)
   - totalAmount: Float
-  - items: List<CartItem>
+  - itemCount: Int
+  - expiresAt: Date
 
 Methods / Operations:
+  - create(clientId, restaurantId)
+    Route: POST /cart
+    Authorization: Client
+    Description: Initializes a new cart. Old cart is usually cleared.
+    Parameters:
+      - restaurantId: String
+    Request JSON Example: { "restaurantId": "r1" }
+    Success Response Example: { "cartId": "c1" }
+    Possible Errors:
+      - 409: Cart already active for another restaurant
+
   - addItem(menuItemId, quantity)
     Route: POST /cart/items
-    Description: Adds an item to the cart.
-    Returns: CartItem
+    Authorization: Client
+    Description: Adds an item.
+    Parameters:
+      - menuItemId: String
+      - quantity: Int
+    Request JSON Example: { "menuItemId": "m1", "quantity": 2 }
+    Success Response Example: { "cartId": "c1", "itemCount": 2 }
+    Possible Errors:
+      - 400: Item unavailable
 
-  - convertToOrder(addressId, paymentMethod)
-    Route: POST /cart/checkout
-    Description: Converts the cart into a placed order.
-    Returns: Order
+  - updateItem(itemId, quantity)
+    Route: PATCH /cart/items/:itemId
+    Authorization: Client
+    Description: Changes quantity of an item.
+    Parameters:
+      - quantity: Int
+    Request JSON Example: { "quantity": 3 }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 404: Item not in cart
+
+  - removeItem(itemId)
+    Route: DELETE /cart/items/:itemId
+    Authorization: Client
+    Description: Removes an item completely.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 404: Item not found
+
+  - clear()
+    Route: DELETE /cart
+    Authorization: Client
+    Description: Empties the cart.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 404: No active cart
+
+  - applyPromo(promoCode)
+    Route: POST /cart/promo
+    Authorization: Client
+    Description: Applies a discount code to the cart.
+    Parameters:
+      - promoCode: String
+    Request JSON Example: { "code": "SAVE10" }
+    Success Response Example: { "discount": 100, "finalTotal": 900 }
+    Possible Errors:
+      - 400: Invalid code
+
+  - getByClient(clientId)
+    Route: GET /cart
+    Authorization: Client
+    Description: Retrieves the current active cart.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: { "cartId": "c1", "items": [...] }
+    Possible Errors:
+      - 404: No active cart
 
 ================================================================================
-CLASS: Order
-FILENAME: Order.txt
+Class Name: CartItem
+Description: Represents a specific line item in the cart.
+
+Attributes:
+  - itemId: String (PK)
+  - cartId: String (FK)
+  - menuItemId: String (FK)
+  - quantity: Int
+  - subtotal: Float
+  - specialInstructions: String
+  - addons: JSON
+
+Methods / Operations:
+  - addInstructions(instructions)
+    Route: PATCH /cart/items/:itemId/instructions
+    Authorization: Client
+    Description: Adds specific cooking or prep notes.
+    Parameters:
+      - instructions: String
+    Request JSON Example: { "instructions": "No onions" }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 404: Item not found
+
+  - addAddon(addon)
+    Route: POST /cart/items/:itemId/addons
+    Authorization: Client
+    Description: Adds a topping or extra.
+    Parameters:
+      - addonId: String
+    Request JSON Example: { "addonId": "cheese" }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 400: Invalid addon
+
+
 ================================================================================
 Class Name: Order
-Description: Represents a placed order.
+Description: Represents a completed purchase request from a client.
+
 Attributes:
   - orderId: String (PK)
   - clientId: String (FK)
   - restaurantId: String (FK)
   - driverId: String (FK)
-  - status: Enum{Pending, Accepted, ...}
+  - status: Enum (Pending, Accepted, Preparing, ReadyForPickup, OutForDelivery, Delivered, Cancelled)
+  - paymentMethod: Enum (COD, Card)
+  - paymentStatus: Enum (Pending, Paid)
   - totalAmount: Float
+  - deliveryFee: Float
+  - createdAt: Date
 
 Methods / Operations:
+  - place(cartId, addressId, paymentMethod)
+    Route: POST /orders
+    Authorization: Client
+    Description: Creates an order from cart.
+    Parameters:
+      - cartId: String
+      - addressId: String
+      - paymentMethod: String
+    Request JSON Example: { "cartId": "c1", "addressId": "a1", "paymentMethod": "COD" }
+    Success Response Example: { "orderId": "o1", "status": "Pending" }
+    Possible Errors:
+      - 400: Validation failed
+
+  - accept(restaurantId)
+    Route: POST /orders/:orderId/accept
+    Authorization: RestaurantOwner
+    Description: Restaurant accepts the order.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "status": "Accepted" }
+    Possible Errors:
+      - 403: Not owner
+
+  - startPreparing()
+    Route: POST /orders/:orderId/prepare
+    Authorization: RestaurantOwner
+    Description: Updates status to Preparing.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "status": "Preparing" }
+    Possible Errors:
+      - 400: Invalid transition
+
+  - markReady()
+    Route: POST /orders/:orderId/ready
+    Authorization: RestaurantOwner
+    Description: Updates status to ReadyForPickup. Notifies drivers.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "status": "ReadyForPickup" }
+    Possible Errors:
+      - 400: Invalid transition
+
   - cancel(userId, reason)
-    Route: POST /orders/{orderId}/cancel
+    Route: POST /orders/:orderId/cancel
+    Authorization: Client, Admin, RestaurantOwner
     Description: Cancels the order.
-    Returns: Boolean
+    Parameters:
+      - reason: String
+    Request JSON Example: { "reason": "Too slow" }
+    Success Response Example: { "status": "Cancelled" }
+    Possible Errors:
+      - 400: Too late to cancel
+
+  - getById(orderId)
+    Route: GET /orders/:orderId
+    Authorization: Authenticated
+    Description: Get full order details.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: { "orderId": "o1", "items": [...] }
+    Possible Errors:
+      - 404: Not found
 
   - getTimeline()
-    Route: GET /orders/{orderId}/timeline
-    Description: Gets status history.
-    Returns: List<StatusHistory>
+    Route: GET /orders/:orderId/timeline
+    Authorization: Authenticated
+    Description: Gets status history logs.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ { "status": "Pending", "time": "10:00" }, ... ]
+    Possible Errors:
+      - 404: Not found
+
+  - updatePaymentStatus(newStatus)
+    Route: PATCH /orders/:orderId/payment-status
+    Authorization: Admin
+    Description: Manually updates payment status.
+    Parameters:
+      - status: String
+    Request JSON Example: { "status": "Paid" }
+    Success Response Example: { "paymentStatus": "Paid" }
+    Possible Errors:
+      - 403: Admin only
 
 ================================================================================
-CLASS: DeliveryRequest
-FILENAME: DeliveryRequest.txt
+Class Name: OrderItem
+Description: Represents a line item within a finalized order.
+
+Attributes:
+  - orderItemId: String (PK)
+  - orderId: String (FK)
+  - menuItemId: String (FK)
+  - name: String
+  - quantity: Int
+  - unitPrice: Float
+  - totalPrice: Float
+
+Methods / Operations:
+  - getByOrder(orderId)
+    Route: GET /orders/:orderId/items
+    Authorization: Authenticated
+    Description: Lists items in an order.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ { "name": "Burger", "quantity": 1 }, ... ]
+    Possible Errors:
+      - 404: Order not found
+
+================================================================================
+Class Name: OrderStatusHistory
+Description: Logs state changes for an order for audit and tracking.
+
+Attributes:
+  - historyId: String (PK)
+  - orderId: String (FK)
+  - status: String
+  - changedAt: Date
+  - changedBy: String
+
+Methods / Operations:
+  - getTimeline(orderId)
+    Route: GET /orders/:orderId/history
+    Authorization: Authenticated
+    Description: Same as Order.getTimeline.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ ... ]
+    Possible Errors:
+      - 404: Order not found
+
 ================================================================================
 Class Name: DeliveryRequest
-Description: A request sent to drivers to fulfill an order.
+Description: A request sent to a driver to deliver an order.
+
 Attributes:
   - requestId: String (PK)
   - orderId: String (FK)
-  - status: Enum{Pending, Accepted, Rejected...}
+  - driverId: String (FK)
+  - status: Enum (Pending, Accepted, Rejected, PickedUp, Delivered)
+  - distanceKm: Float
+  - estimatedEarning: Float
+  - requiresCashCollection: Boolean
 
 Methods / Operations:
   - accept(driverId)
-    Route: POST /delivery-requests/{requestId}/accept
-    Description: Driver accepts the request.
-    Returns: void
+    Route: POST /deliveries/:requestId/accept
+    Authorization: Driver
+    Description: Accept the assignment.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "status": "Accepted" }
+    Possible Errors:
+      - 410: Expired
 
   - reject(driverId, reason)
-    Route: POST /delivery-requests/{requestId}/reject
-    Description: Driver rejects the request.
-    Returns: void
+    Route: POST /deliveries/:requestId/reject
+    Authorization: Driver
+    Description: Decline the assignment.
+    Parameters:
+      - reason: String
+    Request JSON Example: { "reason": "Busy" }
+    Success Response Example: { "status": "Rejected" }
+    Possible Errors:
+      - 404: Request not found
+
+  - markPickedUp()
+    Route: POST /deliveries/:requestId/pickup
+    Authorization: Driver
+    Description: Driver confirms pickup.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "status": "PickedUp" }
+    Possible Errors:
+      - 400: Not allowed
+
+  - markDelivered()
+    Route: POST /deliveries/:requestId/deliver
+    Authorization: Driver
+    Description: Driver confirms delivery.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "status": "Delivered" }
+    Possible Errors:
+      - 400: Not allowed
+
+  - markCashCollected(amount)
+    Route: POST /deliveries/:requestId/cod
+    Authorization: Driver
+    Description: Confirms cash collection for COD orders.
+    Parameters:
+      - amount: Float
+    Request JSON Example: { "amount": 1500 }
+    Success Response Example: { "cashCollected": true }
+    Possible Errors:
+      - 400: Amount mismatch
+
+  - getPending(driverId)
+    Route: GET /drivers/deliveries/pending
+    Authorization: Driver
+    Description: Get new requests offering delivery.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ { "requestId": "req1", "earning": 200 } ]
+    Possible Errors:
+      - 403: Forbidden
+
 
 ================================================================================
-CLASS: Payment
-FILENAME: Payment.txt
-================================================================================
-Class Name: Payment
-Description: Handles payment transactions for orders.
+Class Name: RealTimeTracking
+Description: Stores GPS telemetry for active deliveries.
+
 Attributes:
-  - paymentId: String (PK)
+  - trackingId: String (PK)
+  - deliveryRequestId: String (FK)
+  - latitude: Float
+  - longitude: Float
+  - timestamp: Date
+
+Methods / Operations:
+  - getLatestPosition(requestId)
+    Route: GET /drivers/tracking/:requestId/latest
+    Authorization: Client, Admin
+    Description: Gets the last known location of the driver.
+    Parameters:
+      - requestId: String
+    Request JSON Example: N/A
+    Success Response Example: { "lat": 36.7, "lon": 3.2 }
+    Possible Errors:
+      - 404: Not found
+
+================================================================================
+Class Name: DriverEarning
+Description: Records financial earnings for a driver per order.
+
+Attributes:
+  - earningId: String (PK)
+  - driverId: String (FK)
   - orderId: String (FK)
-  - method: Enum{COD, Card, BankTransfer}
-  - status: Enum{Pending, Authorized, Paid, Failed}
-  - amount: Float
+  - netAmount: Float
+  - status: Enum (Pending, Paid)
 
 Methods / Operations:
-  - processCardPayment(cardDetails)
-    Route: POST /payments/{paymentId}/process
-    Description: Process a credit card payment.
-    Returns: Boolean
+  - getByDriver(driverId)
+    Route: GET /drivers/earnings
+    Authorization: Driver
+    Description: Lists earnings history.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ { "earningId": "e1", "amount": 300 }, ... ]
+    Possible Errors:
+      - 403: Forbidden
 
-================================================================================
-CLASS: Notification
-FILENAME: Notification.txt
-================================================================================
-Class Name: Notification
-Description: System notifications for users.
-Attributes:
-  - notificationId: String (PK)
-  - userId: String (FK)
-  - title: String
-  - body: String
-  - isRead: Boolean
-
-Methods / Operations:
-  - markAsRead()
-    Route: PATCH /notifications/{notificationId}/read
-    Description: Marks notification as read.
-    Returns: void
-
-================================================================================
-CLASS: SupportTicket
-FILENAME: SupportTicket.txt
-================================================================================
-Class Name: SupportTicket
-Description: Customer support tickets.
-Attributes:
-  - ticketId: String (PK)
-  - userId: String (FK)
-  - subject: String
-  - status: Enum{Open, Closed...}
-
-Methods / Operations:
-  - addReply(userId, message)
-    Route: POST /support/tickets/{ticketId}/reply
-    Description: Adds a message to the ticket.
-    Returns: void
-
-================================================================================
-CLASS: AnalyticsReport
-FILENAME: AnalyticsReport.txt
-================================================================================
-Class Name: AnalyticsReport
-Description: System-wide analytics reports.
-Attributes:
-  - reportId: String (PK)
-  - totalOrders: Int
-  - totalRevenue: Float
-
-Methods / Operations:
-  - generate(type, periodStart, periodEnd)
-    Route: POST /analytics/generate
-    Description: Triggers report generation.
-    Returns: AnalyticsReport
-
-================================================================================
-CLASS: Promotion
-FILENAME: Promotion.txt
-================================================================================
-Class Name: Promotion
-Description: Discount codes and promotional offers.
-Attributes:
-  - promoId: String (PK)
-  - discountType: Enum
-  - discountValue: Float
-  - validTo: Date
-
-Methods / Operations:
-  - apply(orderId)
-    Route: POST /promotions/apply
-    Description: Applies a promo code to an order.
-    Returns: Float
-
-================================================================================
-CLASS: Vehicle
-FILENAME: Vehicle.txt
 ================================================================================
 Class Name: Vehicle
-Description: Driver's vehicle information.
+Description: Represents a vehicle used by a driver.
+
 Attributes:
   - vehicleId: String (PK)
   - driverId: String (FK)
   - plateNumber: String
-  - type: Enum
+  - type: Enum (Bike, Car)
+  - isActive: Boolean
 
 Methods / Operations:
   - activate()
-    Route: POST /vehicles/{vehicleId}/activate
-    Description: Sets vehicle as active.
-    Returns: void
+    Route: PATCH /drivers/vehicles/:vehicleId/activate
+    Authorization: Driver, Admin
+    Description: Marks vehicle as active.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "isActive": true }
+    Possible Errors:
+      - 400: Documents expired
+
+  - getByDriver(driverId)
+    Route: GET /drivers/vehicles
+    Authorization: Driver
+    Description: Lists driver's vehicles.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ { "model": "Sym", "plate": "123" } ]
+    Possible Errors:
+      - 404: None
 
 ================================================================================
-CLASS: Other Classes (Summary)
-FILENAME: Shared_Models.txt
+Class Name: DriverDocument
+Description: Legal documents required for drivers (License, Insurance).
+
+Attributes:
+  - documentId: String (PK)
+  - driverId: String (FK)
+  - type: Enum
+  - status: Enum (Pending, Verified, Rejected)
+  - expiryDate: Date
+
+Methods / Operations:
+  - upload(driverId, type, file)
+    Route: POST /drivers/documents
+    Authorization: Driver
+    Description: Uploads a document.
+    Parameters:
+      - type: String
+      - file: Blob
+    Request JSON Example: N/A (Multipart)
+    Success Response Example: { "status": "Pending" }
+    Possible Errors:
+      - 400: Bad file
+
+  - verify(adminId)
+    Route: POST /admin/drivers/documents/:documentId/verify
+    Authorization: Admin
+    Description: Admin approves document.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "status": "Verified" }
+    Possible Errors:
+      - 404: Document not found
+
 ================================================================================
-Classes included:
-- RestaurantSchedule
-- CartItem
-- OrderItem
-- OrderStatusHistory
-- RealTimeTracking
-- DriverEarning
-- DriverDocument
-- CashCollection
-- Refund
-- Invoice
-- Commission
-- RestaurantPayout
-- Rating
-- PromoUsage
-- SearchHistory
-- Banner
+Class Name: Payment
+Description: Handles transaction processing for orders.
 
-These classes primarily serve as data structures or sub-resources managed via the main controllers (Order, Restaurant, Driver, etc.). Their CRUD operations are typically nested under their parent resources.
+Attributes:
+  - paymentId: String (PK)
+  - orderId: String (FK)
+  - method: Enum (COD, Card)
+  - status: Enum (Pending, Captured, Failed)
+  - amount: Float
 
-Example Routes:
-- GET /orders/{orderId}/items (OrderItem)
-- GET /drivers/{driverId}/earnings (DriverEarning)
-- POST /drivers/{driverId}/documents (DriverDocument)
-- GET /restaurants/{restaurantId}/payouts (RestaurantPayout)
+Methods / Operations:
+  - processCardPayment(cardDetails)
+    Route: POST /payments/process/card
+    Authorization: Client
+    Description: Initiates card payment.
+    Parameters:
+      - number: String
+      - cvc: String
+    Request JSON Example: { "number": "4242...", "amount": 1000 }
+    Success Response Example: { "status": "Captured" }
+    Possible Errors:
+      - 402: Insufficient funds
+
+  - getStatus()
+    Route: GET /payments/:paymentId/status
+    Authorization: Authenticated
+    Description: Checks payment status.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: { "status": "Paid" }
+    Possible Errors:
+      - 404: Not found
+
+================================================================================
+Class Name: CashCollection
+Description: Tracks physical cash collected by drivers (COD).
+
+Attributes:
+  - collectionId: String (PK)
+  - driverId: String (FK)
+  - amountCollected: Float
+  - status: Enum (Collected, Verified, Deposited)
+
+Methods / Operations:
+  - verify(adminId)
+    Route: POST /admin/cod/collections/:collectionId/verify
+    Authorization: Admin
+    Description: Confirms cash reception at HQ.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "status": "Verified" }
+    Possible Errors:
+      - 404: Not found
+
+  - markAsDeposited(reference)
+    Route: POST /drivers/cod/collections/:collectionId/deposit
+    Authorization: Driver
+    Description: Driver marks cash as deposited to bank.
+    Parameters:
+      - reference: String
+    Request JSON Example: { "reference": "TRX123" }
+    Success Response Example: { "status": "Deposited" }
+    Possible Errors:
+      - 400: Invalid state
+
+================================================================================
+Class Name: Refund
+Description: Processes returns of funds to clients.
+
+Attributes:
+  - refundId: String (PK)
+  - paymentId: String (FK)
+  - amount: Float
+  - status: Enum (Pending, Processed)
+
+Methods / Operations:
+  - approve(adminId)
+    Route: POST /admin/refunds/:refundId/approve
+    Authorization: Admin
+    Description: Approves a refund request.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "status": "Processed" }
+    Possible Errors:
+      - 400: Already processed
+
+================================================================================
+Class Name: Invoice
+Description: Generates official billing documents for orders.
+
+Attributes:
+  - invoiceId: String (PK)
+  - orderId: String (FK)
+  - pdfUrl: String
+  - status: Enum (Issued, Paid)
+
+Methods / Operations:
+  - generate(orderId)
+    Route: POST /orders/:orderId/invoice
+    Authorization: System, Admin
+    Description: Creates invoice for an order.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "pdfUrl": "https://..." }
+    Possible Errors:
+      - 404: Order not found
+
+
+================================================================================
+Class Name: Commission
+Description: Tracks platform fees charged to restaurants and drivers.
+
+Attributes:
+  - commissionId: String (PK)
+  - orderId: String (FK)
+  - amount: Float
+  - status: Enum (Pending, Paid)
+
+Methods / Operations:
+  - getByOrder(orderId)
+    Route: GET /admin/commissions/orders/:orderId
+    Authorization: Admin
+    Description: View commission for a specific order.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: { "amount": 50 }
+    Possible Errors:
+      - 404: Not found
+
+================================================================================
+Class Name: RestaurantPayout
+Description: Aggregated earnings transfer to restaurant partners.
+
+Attributes:
+  - payoutId: String (PK)
+  - restaurantId: String (FK)
+  - netAmount: Float
+  - status: Enum (Pending, Processing, Paid)
+
+Methods / Operations:
+  - getPayoutHistory(restaurantId)
+    Route: GET /owners/restaurants/:restaurantId/payouts
+    Authorization: RestaurantOwner
+    Description: View past payouts.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ { "amount": 50000, "date": "2023-10-01" } ]
+    Possible Errors:
+      - 403: Forbidden
+
+================================================================================
+Class Name: Rating
+Description: User feedback and scores for orders/partners.
+
+Attributes:
+  - ratingId: String (PK)
+  - orderId: String (FK)
+  - score: Int
+  - comment: String
+
+Methods / Operations:
+  - addComment(comment)
+    Route: POST /ratings/:ratingId/comment
+    Authorization: Client
+    Description: Updates review text.
+    Parameters:
+      - comment: String
+    Request JSON Example: { "comment": "Actually it was great" }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 403: Not author
+
+  - respond(response)
+    Route: POST /ratings/:ratingId/respond
+    Authorization: RestaurantOwner
+    Description: Owner replies to a review.
+    Parameters:
+      - response: String
+    Request JSON Example: { "response": "Sorry about that!" }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 403: Not owner
+
+================================================================================
+Class Name: Promotion
+Description: Marketing campaigns and discount codes.
+
+Attributes:
+  - promoId: String (PK)
+  - description: String
+  - discountType: Enum
+  - discountValue: Float
+  - code: String
+
+Methods / Operations:
+  - activate()
+    Route: PATCH /admin/promotions/:promoId/activate
+    Authorization: Admin
+    Description: Enables a promo.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "isActive": true }
+    Possible Errors:
+      - 404: Not found
+
+  - validate(clientId, orderAmount)
+    Route: POST /promotions/validate
+    Authorization: Client
+    Description: Checks if a code is valid for cart.
+    Parameters:
+      - code: String
+      - amount: Float
+    Request JSON Example: { "code": "SAVE20", "amount": 1000 }
+    Success Response Example: { "valid": true, "discount": 200 }
+    Possible Errors:
+      - 400: Invalid code
+
+================================================================================
+Class Name: PromoUsage
+Description: Records redemption of promotions.
+
+Attributes:
+  - usageId: String (PK)
+  - promoId: String (FK)
+  - clientId: String (FK)
+
+Methods / Operations:
+  - getUsageHistory(clientId)
+    Route: GET /clients/promotions/history
+    Authorization: Client
+    Description: See past savings.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ { "code": "SAVE20", "saved": 200 } ]
+    Possible Errors:
+      - 401: Unauthorized
+
+================================================================================
+Class Name: Notification
+Description: System messages sent to users.
+
+Attributes:
+  - notificationId: String (PK)
+  - userId: String (FK)
+  - title: String
+  - isRead: Boolean
+
+Methods / Operations:
+  - getByUser(userId)
+    Route: GET /notifications
+    Authorization: Authenticated
+    Description: Get user's notifications.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ { "title": "Order Delivered" } ]
+    Possible Errors:
+      - 401: Unauthorized
+
+  - markAsRead()
+    Route: PATCH /notifications/:notificationId/read
+    Authorization: Authenticated
+    Description: Marks as read.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "isRead": true }
+    Possible Errors:
+      - 404: Not found
+
+================================================================================
+Class Name: SupportTicket
+Description: Customer service requests.
+
+Attributes:
+  - ticketId: String (PK)
+  - userId: String (FK)
+  - subject: String
+  - status: Enum (Open, Resolved)
+  - messages: Array
+
+Methods / Operations:
+  - addReply(message)
+    Route: POST /support/tickets/:ticketId/reply
+    Authorization: Authenticated
+    Description: Add message to conversation.
+    Parameters:
+      - message: String
+    Request JSON Example: { "message": "Still waiting" }
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 404: Ticket not found
+
+  - resolve(resolution)
+    Route: PATCH /support/tickets/:ticketId/resolve
+    Authorization: Admin
+    Description: Mark ticket as resolved.
+    Parameters:
+      - resolution: String
+    Request JSON Example: { "resolution": "Refunded" }
+    Success Response Example: { "status": "Resolved" }
+    Possible Errors:
+      - 404: Not found
+
+================================================================================
+Class Name: SearchHistory
+Description: Logs user search queries for recommendations.
+
+Attributes:
+  - historyId: String (PK)
+  - clientId: String (FK)
+  - query: String
+
+Methods / Operations:
+  - getRecentSearches()
+    Route: GET /clients/search/history
+    Authorization: Client
+    Description: Get last 10 searches.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ "pizza", "sushi" ]
+    Possible Errors:
+      - 401: Unauthorized
+
+  - clearHistory()
+    Route: DELETE /clients/search/history
+    Authorization: Client
+    Description: Wipes search history.
+    Parameters: None
+    Request JSON Example: {}
+    Success Response Example: { "success": true }
+    Possible Errors:
+      - 401: Unauthorized
+
+================================================================================
+Class Name: Banner
+Description: Promotional images displayed on home screen.
+
+Attributes:
+  - bannerId: String (PK)
+  - imageUrl: String
+  - actionUrl: String
+  - isActive: Boolean
+
+Methods / Operations:
+  - getActiveBanners()
+    Route: GET /banners
+    Authorization: Public
+    Description: List active banners for carousel.
+    Parameters: None
+    Request JSON Example: N/A
+    Success Response Example: [ { "imageUrl": "..." } ]
+    Possible Errors:
+      - 404: None
+
+================================================================================
+Class Name: AnalyticsReport
+Description: Aggregated system data.
+
+Attributes:
+  - reportId: String (PK)
+  - totalOrders: Int
+  - totalRevenue: Float
+  - period: Enum
+
+Methods / Operations:
+  - generate(type, start, end)
+    Route: POST /admin/analytics/generate
+    Authorization: Admin
+    Description: Creates a new report.
+    Parameters:
+      - type: String
+      - start: Date
+      - end: Date
+    Request JSON Example: { "type": "Weekly", "start": "2023-01-01", "end": "2023-01-07" }
+    Success Response Example: { "reportId": "r1", "totalOrders": 100 }
+    Possible Errors:
+      - 400: Invalid date range
+

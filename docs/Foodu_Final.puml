@@ -177,28 +177,25 @@ class Restaurant {
   - deliveryRadius: Float
   - minOrderAmount: Float
   - avgDeliveryTime: Int
-  - cuisineTypes: String[]
   - createdAt: Date
   - isBlocked: Boolean
   - isFeatured: Boolean
   - acceptsCOD: Boolean
   + updateStatus(status): void
-  + acceptOrder(orderId): void
-  + rejectOrder(orderId, reason): void
-  + startPreparing(orderId): void
-  + markReady(orderId): void
-  + checkAvailability(): Boolean
-  + calculateDeliveryFee(distance): Float
-  + isWithinDeliveryRadius(lat, lon): Boolean
-  + updateRating(newRating): void
-  + getMenu(): Menu
-  + getActiveOrders(): List<Order>
+  + ---------startPreparing(orderId): void
+  + ---------markReady(orderId): void
+  + ---------checkAvailability(): Boolean
+  + ---------calculateDeliveryFee(distance): Float
+  + ---------isWithinDeliveryRadius(lat, lon): Boolean
+  + ---------updateRating(newRating): void
+  + ---------getMenu(): Menu
+  + ---------getActiveOrders(): List<Order>
   + getById(restaurantId): Restaurant
-  + search(query, filters): List<Restaurant>
-  + getNearby(lat, lon, radius): List<Restaurant>
-  + feature(): void
-  + unfeature(): void
-  + toggleCODAcceptance(): void
+  + ---------search(query, filters): List<Restaurant>
+  + ---------getNearby(lat, lon, radius): List<Restaurant>
+  + ---------feature(): void
+  + ---------unfeature(): void
+  + ---------toggleCODAcceptance(): void
 }
 class RestaurantSchedule {
   - scheduleId: String <<PK>>

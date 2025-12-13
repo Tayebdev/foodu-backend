@@ -14,7 +14,18 @@ const {
   updateRestaurantOwnerValidator,
   deleteRestaurantOwnerValidator,
 } = require("../utils/validator/RestaurantOwner_validator");
-
+const {
+  createRestaurantValidator,
+  deleteRestaurantValidator,
+  updateRestaurantValidator,
+  getRestaurantByIdValidator,
+} = require("../utils/validator/restaurant_validator");
+const {
+  registerRestaurant,
+  updateRestaurant,
+  deleteRestaurant,
+  getRestaurantById,
+} = require("../controllers/restaurant_controller");
 router
   .route("/")
   .post(createRestaurantOwnerValidator, createRestaurantOwner)
@@ -24,5 +35,16 @@ router
   .get(getRestaurantOwnerByIdValidator, getRestaurantOwnerById)
   .put(updateRestaurantOwnerValidator, updateRestaurantOwner)
   .delete(deleteRestaurantOwnerValidator, deleteRestaurantOwner);
+
+router.post(
+  "/restaurant",
+  createRestaurantValidator,
+  registerRestaurant
+);
+router
+  .route("/restaurant/:id")
+  .get(getRestaurantByIdValidator, getRestaurantById)
+  .put(updateRestaurantValidator, updateRestaurant)
+  .delete(deleteRestaurantValidator, deleteRestaurant);
 
 module.exports = router;
