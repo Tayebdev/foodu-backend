@@ -821,31 +821,7 @@ Methods / Operations:
     Success Response Example: { "acceptsCOD": true }
     Possible Errors:
       - 403: Forbidden
-
-================================================================================
-Class Name: RestaurantSchedule
-Description: Defines operating hours for a restaurant.
-
-Attributes:
-  - scheduleId: String (PK)
-  - restaurantId: String (FK)
-  - dayOfWeek: Enum - Mon, Tue...
-  - openTime: Time
-  - closeTime: Time
-
-Methods / Operations:
-  - getByRestaurant(restaurantId)
-    Route: GET /restaurants/:restaurantId/schedule
-    Authorization: Public
-    Description: Gets opening hours.
-    Parameters: None
-    Request JSON Example: N/A
-    Success Response Example:
-      [ { "day": "Mon", "open": "09:00", "close": "22:00" }, ... ]
-    Possible Errors:
-      - 404: Not found
-
-
+      
 ================================================================================
 Class Name: MenuCategory
 Description: Represents a section of a menu (e.g., "Starters", "Drinks").

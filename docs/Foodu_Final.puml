@@ -197,17 +197,6 @@ class Restaurant {
   + ---------unfeature(): void
   + ---------toggleCODAcceptance(): void
 }
-class RestaurantSchedule {
-  - scheduleId: String <<PK>>
-  - restaurantId: String <<FK>>
-  - dayOfWeek: Enum{Mon, Tue, Wed, Thu, Fri, Sat, Sun}
-  - openTime: Time
-  - closeTime: Time
-  - isClosed: Boolean
-  + isOpenNow(): Boolean
-  + getNextOpenTime(): Time
-  + getByRestaurant(restaurantId): List<RestaurantSchedule>
-}
 class MenuCategory {
   - categoryId: String <<PK>>
   - restaurantId: String <<FK>>
