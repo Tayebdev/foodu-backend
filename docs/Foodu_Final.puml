@@ -188,7 +188,6 @@ class Restaurant {
   + ---------calculateDeliveryFee(distance): Float
   + ---------isWithinDeliveryRadius(lat, lon): Boolean
   + ---------updateRating(newRating): void
-  + ---------getMenu(): Menu
   + ---------getActiveOrders(): List<Order>
   + getById(restaurantId): Restaurant
   + ---------search(query, filters): List<Restaurant>
@@ -205,15 +204,14 @@ class MenuCategory {
   - displayOrder: Int
   - isActive: Boolean
   - imageUrl: String
-  + reorder(newOrder): void
-  + getItems(): List<MenuItem>
+  + ----------reorder(newOrder): void
   + activate(): void
   + deactivate(): void
   + getByRestaurant(restaurantId): List<MenuCategory>
 }
 class MenuItem {
   - menuItemId: String <<PK>>
-  - categoryId: String <<FK>>
+  - menuCategoryId: String <<FK>>
   - name: String
   - description: String
   - price: Float
@@ -221,17 +219,13 @@ class MenuItem {
   - imageUrl: String
   - isAvailable: Boolean
   - prepTimeMinutes: Int
-  - ingredients: String[]
-  - allergens: String[]
   + toggleAvailability(): void
   + updatePrice(newPrice): void
   + setDiscount(discountPrice): void
   + removeDiscount(): void
-  + uploadImage(file): String
-  + addTag(tag): void
-  + removeTag(tag): void
-  + getByCategory(categoryId): List<MenuItem>
-  + search(query): List<MenuItem>
+  + ----------uploadImage(file): String
+  + getByMenuCategory(menuCategoryId): List<MenuItem>
+  + ----------search(query): List<MenuItem>
 }
 class Cart {
   - cartId: String <<PK>>
