@@ -140,3 +140,71 @@ exports.getByMenuCategoryValidator = [
 
   runValidation,
 ];
+
+exports.getMenuItemByIdValidator = [
+  check("id")
+    .isInt({ gt: 0 })
+    .withMessage("Menu item ID must be a valid integer")
+    .bail()
+    .custom(async (value) => {
+      const item = await db("menuItem").where({ id: value }).first();
+      if (!item) {
+        throw new ErrorAPI("Menu item not found", 404);
+      }
+      return true;
+    }),
+
+  runValidation,
+];
+
+exports.updateMenuItemValidator = [
+  check("name").optional().notEmpty().withMessage("name cannot be empty"),
+
+  check("price")
+    .optional()
+    .isFloat({ gt: 0 })
+    .withMessage("price must be greater than 0"),
+
+  check("discountPrice")
+    .optional()
+    .isFloat({ gt: 0 })
+    .withMessage("discountPrice must be greater than 0"),
+
+  check("picture").optional().notEmpty().withMessage("picture cannot be empty"),
+
+  check("prepTimeMinutes")
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage("prepTimeMinutes must be a positive integer"),
+
+  check("menuCategoryId")
+    .optional()
+    .isInt({ gt: 0 })
+    .withMessage("menuCategoryId must be a valid integer")
+    .bail()
+    .custom(async (value) => {
+      const category = await db("menuCategory").where({ id: value }).first();
+      if (!category) {
+        throw new ErrorAPI("Menu category not found", 404);
+      }
+      return true;
+    }),
+
+  runValidation,
+];
+
+exports.deleteMenuItemValidator = [
+  check("id")
+    .isInt({ gt: 0 })
+    .withMessage("Menu item ID must be a valid integer")
+    .bail()
+    .custom(async (value) => {
+      const item = await db("menuItem").where({ id: value }).first();
+      if (!item) {
+        throw new ErrorAPI("Menu item not found", 404);
+      }
+      return true;
+    }),
+
+  runValidation,
+];
